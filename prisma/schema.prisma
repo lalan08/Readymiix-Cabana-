@@ -1,0 +1,203 @@
+// ReadyMiix Cabana — schéma de la base de données
+// SQLite pour la V1 (fichier local). Migration vers PostgreSQL possible
+// plus tard sans changer le code applicatif (Prisma).
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  MANAGER
+  EMPLOYEE
+}
+
+enum Unit {
+  BOUTEILLE
+  PAQUET
+  KILOGRAMME
+  LITRE
+  CARTON
+  PIECE
+  SAC
+  BOITE
+}
+
+enum StockStatus {
+  SUFFISANT
+  FAIBLE
+  RUPTURE
+}
+
+enum MovementType {
+  ENTREE
+  SORTIE
+  PERTE
+  REAPPRO
+  INVENTAIRE
+  CREATION
+}
+
+enum ReplenishmentStatus {
+  A_PREPARER
+  A_ACHETER
+  EN_COURS
+  PRET
+  TRANSFERE
+  TERMINE
+}
+
+enum Urgency {
+  BASSE
+  NORMALE
+  HAUTE
+  CRITIQUE
+}
+
+enum LossReason {
+  CASSE
+  RENVERSE
+  PERIME
+  OFFERT
+  ERREUR_PREPARATION
+  AUTRE
+}
+
+model Site {
+  id        String    @id @default(cuid())
+  name      String    @default("Stand ReadyMiix Cabana")
+  createdAt DateTime  @default(now())
+  products  Product[]
+  users     User[]
+}
+
+model User {
+  id           String    @id @default(cuid())
+  name         String
+  email        String    @unique
+  pinHash      String
+  role         Role      @default(EMPLOYEE)
+  active       Boolean   @default(true)
+  siteId       String?
+  site         Site?     @relation(fields: [siteId], references: [id])
+  createdAt    DateTime  @default(now())
+
+  movements        StockMovement[]
+  losses           Loss[]
+  inventorySessions InventorySession[]
+  updatedProducts  Product[] @relation("ProductUpdatedBy")
+}
+
+model Category {
+  id        String    @id @default(cuid())
+  name      String    @unique
+  icon      String    @default("📦")
+  order     Int       @default(0)
+  createdAt DateTime  @default(now())
+  products  Product[]
+}
+
+model Product {
+  id              String   @id @default(cuid())
+  name            String
+  photoUrl        String?
+  categoryId      String
+  category        Category @relation(fields: [categoryId], references: [id])
+  quantity        Float    @default(0)
+  unit            Unit     @default(PIECE)
+  minQuantity     Float    @default(0)
+  idealQuantity   Float    @default(0)
+  location        String?
+  supplier        String?
+  purchasePrice   Float?
+  comment         String?
+  siteId          String?
+  site            Site?    @relation(fields: [siteId], references: [id])
+  archived        Boolean  @default(false)
+
+  updatedAt       DateTime @updatedAt
+  updatedById     String?
+  updatedBy       User?    @relation("ProductUpdatedBy", fields: [updatedById], references: [id])
+  createdAt       DateTime @default(now())
+
+  movements           StockMovement[]
+  replenishmentItems  ReplenishmentItem[]
+  losses              Loss[]
+  inventoryLines       InventoryLine[]
+
+  @@index([categoryId])
+}
+
+model StockMovement {
+  id        String       @id @default(cuid())
+  productId String
+  product   Product      @relation(fields: [productId], references: [id])
+  type      MovementType
+  oldQty    Float
+  newQty    Float
+  delta     Float
+  comment   String?
+  userId    String?
+  user      User?        @relation(fields: [userId], references: [id])
+  createdAt DateTime     @default(now())
+
+  @@index([productId])
+  @@index([createdAt])
+}
+
+model ReplenishmentItem {
+  id             String               @id @default(cuid())
+  productId      String
+  product        Product              @relation(fields: [productId], references: [id])
+  status         ReplenishmentStatus  @default(A_PREPARER)
+  urgency        Urgency              @default(NORMALE)
+  recommendedQty Float                @default(0)
+  comment        String?
+  createdAt      DateTime             @default(now())
+  updatedAt      DateTime             @updatedAt
+
+  @@index([productId])
+  @@index([status])
+}
+
+model Loss {
+  id        String     @id @default(cuid())
+  productId String
+  product   Product    @relation(fields: [productId], references: [id])
+  quantity  Float
+  reason    LossReason
+  photoUrl  String?
+  comment   String?
+  userId    String?
+  user      User?      @relation(fields: [userId], references: [id])
+  createdAt DateTime   @default(now())
+
+  @@index([productId])
+}
+
+model InventorySession {
+  id        String          @id @default(cuid())
+  userId    String?
+  user      User?           @relation(fields: [userId], references: [id])
+  notes     String?
+  startedAt DateTime        @default(now())
+  finishedAt DateTime?
+  lines     InventoryLine[]
+}
+
+model InventoryLine {
+  id           String            @id @default(cuid())
+  sessionId    String
+  session      InventorySession  @relation(fields: [sessionId], references: [id])
+  productId    String
+  product      Product           @relation(fields: [productId], references: [id])
+  previousQty  Float
+  countedQty   Float
+
+  @@index([sessionId])
+}
