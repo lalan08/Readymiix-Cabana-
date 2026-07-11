@@ -8,21 +8,23 @@ téléphone pendant le service.
 
 - **Next.js 16** (App Router, Server Actions) + TypeScript
 - **Tailwind CSS v4** pour le design (thème tropical)
-- **Prisma + SQLite** pour la base de données (fichier `prisma/dev.db`).
-  Le schéma est compatible PostgreSQL/MySQL : il suffit de changer le
-  `provider` et la variable `DATABASE_URL` pour migrer vers une base de
-  production partagée.
+- **Prisma + PostgreSQL** pour la base de données, avec migrations versionnées
+  (`prisma/migrations`), appliquées automatiquement au build (`prisma migrate
+  deploy`).
 - **Authentification maison** : session JWT (cookie httpOnly) via `jose`,
   connexion par e-mail + code personnel (PIN) haché avec `bcryptjs`.
   Les rôles (`ADMIN`, `MANAGER`, `EMPLOYEE`) contrôlent l'accès aux pages
   sensibles (utilisateurs, paramètres).
 
-## Démarrage
+## Démarrage (développement local)
+
+Nécessite une base PostgreSQL accessible (locale ou hébergée gratuitement,
+ex. [Neon](https://neon.tech), [Supabase](https://supabase.com)).
 
 ```bash
 npm install
-cp .env.example .env   # puis personnaliser SESSION_SECRET
-npm run db:push        # crée la base SQLite à partir du schéma Prisma
+cp .env.example .env   # renseigner DATABASE_URL et SESSION_SECRET
+npm run db:migrate     # applique les migrations sur la base
 npm run db:seed        # crée les catégories, produits de démo et comptes
 npm run dev
 ```
@@ -70,14 +72,23 @@ catégories.
   automatiquement à chaque chargement du tableau de bord et de la page
   Réapprovisionnement à partir des niveaux de stock réels.
 
-## Déploiement
+## Déploiement (ex. Vercel)
 
-Pour un déploiement en production réel (accès multi-appareils, données
-partagées en temps réel), il est recommandé de :
-
-1. Remplacer SQLite par une base PostgreSQL managée (ex. Vercel Postgres,
-   Neon, Supabase) — seule la variable `DATABASE_URL` et le `provider` du
-   `schema.prisma` changent.
-2. Définir un `SESSION_SECRET` long et aléatoire dans les variables
-   d'environnement de production.
-3. Déployer sur Vercel ou tout hébergeur compatible Next.js.
+1. **Créer une base PostgreSQL** — depuis le tableau de bord Vercel, onglet
+   *Storage* → *Create Database* (intégration Neon ou Vercel Postgres). En la
+   connectant au projet, Vercel injecte automatiquement `DATABASE_URL` (ou
+   une variable équivalente ; renommez-la `DATABASE_URL` si besoin dans les
+   paramètres du projet).
+2. **Définir `SESSION_SECRET`** dans Project Settings → Environment Variables
+   — une longue chaîne aléatoire (ex. générée avec
+   `node -e "console.log(require('crypto').randomBytes(48).toString('hex'))"`).
+3. **Déployer.** La commande de build (`prisma migrate deploy && next build`)
+   applique automatiquement les migrations à chaque déploiement.
+4. **Initialiser les données** (une seule fois, sur une base vide) :
+   - Définir temporairement la variable d'environnement `SEED_TOKEN` (une
+     valeur secrète de votre choix) sur Vercel et redéployer.
+   - Visiter `https://votre-app.vercel.app/api/seed?token=VOTRE_SEED_TOKEN`
+     une fois : cela crée les catégories, produits de démonstration et
+     comptes utilisateurs (voir tableau ci-dessus). L'appel est sans effet
+     si la base contient déjà des utilisateurs.
+   - Supprimer la variable `SEED_TOKEN` une fois l'initialisation faite.

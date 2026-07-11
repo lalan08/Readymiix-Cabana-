@@ -1,13 +1,11 @@
-// ReadyMiix Cabana — schéma de la base de données
-// SQLite pour la V1 (fichier local). Migration vers PostgreSQL possible
-// plus tard sans changer le code applicatif (Prisma).
+// ReadyMiix Cabana — schéma de la base de données (PostgreSQL)
 
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
