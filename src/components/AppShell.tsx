@@ -15,7 +15,7 @@ export function AppShell({
     <div className="min-h-screen md:flex">
       <aside className="no-print hidden w-64 shrink-0 border-r border-[var(--border)] bg-white/70 p-5 md:flex md:flex-col">
         <div className="mb-8 px-1">
-          <Logo size={38} textClassName="text-sm" />
+          <Logo size={44} />
         </div>
         <SideNav role={user.role} />
         <div className="mt-auto pt-6">
@@ -26,7 +26,7 @@ export function AppShell({
       <div className="flex min-h-screen flex-1 flex-col">
         <header className="no-print sticky top-0 z-20 flex items-center justify-between border-b border-[var(--border)] bg-[var(--background)]/90 px-4 py-3 backdrop-blur md:px-8">
           <div className="md:hidden">
-            <Logo size={32} textClassName="text-xs" />
+            <Logo size={34} />
           </div>
           <div className="hidden md:block" />
           <UserMenu user={user} variant="header" />

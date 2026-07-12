@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { jwtVerify } from "jose";
 
 const COOKIE_NAME = "rmc_session";
-const PUBLIC_PATHS = ["/login", "/api/seed"];
+const PUBLIC_PATHS = ["/login", "/api/seed", "/brand"];
 
 function getSecret() {
   const secret = process.env.SESSION_SECRET;
