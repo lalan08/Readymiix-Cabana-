@@ -4,10 +4,10 @@ import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { useState, useTransition } from "react";
 
 export function HistoryFilters({
-  categories,
+  postes,
   users,
 }: {
-  categories: { id: string; name: string; icon: string }[];
+  postes: { id: string; name: string }[];
   users: { id: string; name: string }[];
 }) {
   const router = useRouter();
@@ -39,14 +39,14 @@ export function HistoryFilters({
 
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
         <select
-          value={searchParams.get("categorie") ?? ""}
-          onChange={(e) => update({ categorie: e.target.value || null })}
+          value={searchParams.get("poste") ?? ""}
+          onChange={(e) => update({ poste: e.target.value || null })}
           className="tap-target rounded-xl border border-[var(--border)] bg-white px-2 py-2 text-xs"
         >
-          <option value="">Toutes catégories</option>
-          {categories.map((c) => (
-            <option key={c.id} value={c.id}>
-              {c.icon} {c.name}
+          <option value="">Tous les postes</option>
+          {postes.map((p) => (
+            <option key={p.id} value={p.id}>
+              {p.name}
             </option>
           ))}
         </select>

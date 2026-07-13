@@ -9,7 +9,7 @@ import { LOSS_REASON_LABEL } from "@/lib/losses";
 import { UNIT_LABEL } from "@/lib/stock";
 import type { LossReason } from "@prisma/client";
 
-type Product = { id: string; name: string; quantity: number; unit: keyof typeof UNIT_LABEL; categoryName: string };
+type Product = { id: string; name: string; quantity: number; unit: keyof typeof UNIT_LABEL; posteName: string };
 
 const REASONS = Object.keys(LOSS_REASON_LABEL) as LossReason[];
 
@@ -88,7 +88,7 @@ export function LossForm({ products }: { products: Product[] }) {
                 className="flex w-full items-center justify-between px-3 py-2 text-left text-sm hover:bg-[var(--color-sand-50)]"
               >
                 <span>{p.name}</span>
-                <span className="text-xs text-[var(--foreground)]/50">{p.categoryName}</span>
+                <span className="text-xs text-[var(--foreground)]/50">{p.posteName}</span>
               </button>
             ))}
             {filtered.length === 0 && (

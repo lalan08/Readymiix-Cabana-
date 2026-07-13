@@ -1,4 +1,6 @@
+import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
+import { getSession } from "@/lib/auth";
 import { HistoryFilters } from "@/components/HistoryFilters";
 import { MOVEMENT_TYPE_LABEL, MOVEMENT_TYPE_COLOR } from "@/lib/movements";
 import { UNIT_LABEL, formatQty } from "@/lib/stock";
@@ -9,13 +11,16 @@ export const dynamic = "force-dynamic";
 export default async function HistoryPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string; categorie?: string; personne?: string; du?: string; au?: string }>;
+  searchParams: Promise<{ q?: string; poste?: string; personne?: string; du?: string; au?: string }>;
 }) {
-  const { q, categorie, personne, du, au } = await searchParams;
+  const session = await getSession();
+  if (!session || session.role !== "ADMIN") redirect("/dashboard");
+
+  const { q, poste, personne, du, au } = await searchParams;
 
   const where: Prisma.StockMovementWhereInput = {};
   if (q) where.product = { name: { contains: q } };
-  if (categorie) where.product = { ...(where.product as object), categoryId: categorie };
+  if (poste) where.product = { ...(where.product as object), posteId: poste };
   if (personne) where.userId = personne;
   if (du || au) {
     where.createdAt = {
@@ -24,14 +29,14 @@ export default async function HistoryPage({
     };
   }
 
-  const [movements, categories, users] = await Promise.all([
+  const [movements, postes, users] = await Promise.all([
     prisma.stockMovement.findMany({
       where,
-      include: { product: { include: { category: true } }, user: true },
+      include: { product: { include: { poste: true } }, user: true },
       orderBy: { createdAt: "desc" },
       take: 200,
     }),
-    prisma.category.findMany({ orderBy: { order: "asc" } }),
+    prisma.poste.findMany({ orderBy: { order: "asc" } }),
     prisma.user.findMany({ orderBy: { name: "asc" } }),
   ]);
 
@@ -40,11 +45,11 @@ export default async function HistoryPage({
       <div>
         <h1 className="text-2xl font-bold text-[var(--color-palm-900)]">Historique</h1>
         <p className="mt-1 text-sm text-[var(--foreground)]/60">
-          Entrées, sorties, pertes et réapprovisionnements du stock.
+          Entrées, sorties, pertes et clôtures d&apos;inventaire.
         </p>
       </div>
 
-      <HistoryFilters categories={categories} users={users.map((u) => ({ id: u.id, name: u.name }))} />
+      <HistoryFilters postes={postes} users={users.map((u) => ({ id: u.id, name: u.name }))} />
 
       <p className="text-sm text-[var(--foreground)]/60">{movements.length} mouvement(s)</p>
 
@@ -62,7 +67,7 @@ export default async function HistoryPage({
                   ({m.delta >= 0 ? "+" : ""}
                   {formatQty(m.delta)})
                 </span>
-                {m.user ? ` · ${m.user.name}` : ""} · {m.product.category.name}
+                {m.user ? ` · ${m.user.name}` : ""} · {m.product.poste.name}
               </p>
               {m.comment && <p className="mt-0.5 text-xs italic text-[var(--foreground)]/50">{m.comment}</p>}
             </div>

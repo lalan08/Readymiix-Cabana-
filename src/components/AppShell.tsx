@@ -32,11 +32,11 @@ export function AppShell({
           <UserMenu user={user} variant="header" />
         </header>
 
-        <main className="flex-1 px-4 pb-24 pt-4 md:px-8 md:pb-10 md:pt-6">
+        <main className={`flex-1 px-4 pt-4 md:px-8 md:pb-10 md:pt-6 ${user.role === "ADMIN" ? "pb-24" : "pb-10"}`}>
           {children}
         </main>
 
-        <BottomNav />
+        <BottomNav role={user.role} />
       </div>
     </div>
   );

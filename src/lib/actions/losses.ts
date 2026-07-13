@@ -3,7 +3,6 @@
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { requireSession } from "@/lib/auth";
-import { syncProductReplenishment } from "@/lib/replenishment-sync";
 import type { LossReason } from "@prisma/client";
 
 export type LossInput = {
@@ -48,11 +47,9 @@ export async function declareLossAction(input: LossInput) {
     }),
   ]);
 
-  await syncProductReplenishment(product.id);
-
   revalidatePath("/pertes");
   revalidatePath("/stock");
   revalidatePath("/dashboard");
   revalidatePath("/historique");
-  revalidatePath("/reappro");
+  revalidatePath("/preparation");
 }

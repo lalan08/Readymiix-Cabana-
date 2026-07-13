@@ -10,19 +10,17 @@ import type { Unit } from "@prisma/client";
 
 const UNITS = Object.keys(UNIT_LABEL) as Unit[];
 
-type Category = { id: string; name: string; icon: string };
+type Poste = { id: string; name: string };
 
 export type ProductFormValues = {
   id?: string;
   name: string;
-  categoryId: string;
+  posteId: string;
+  groupe: string;
   quantity: number;
   unit: Unit;
-  minQuantity: number;
-  idealQuantity: number;
-  location: string;
-  supplier: string;
-  purchasePrice: string;
+  targetQuantity: number;
+  depotQuantity: number;
   comment: string;
   photoUrl: string;
 };
@@ -37,10 +35,10 @@ function fileToDataUrl(file: File): Promise<string> {
 }
 
 export function ProductForm({
-  categories,
+  postes,
   initial,
 }: {
-  categories: Category[];
+  postes: Poste[];
   initial?: ProductFormValues;
 }) {
   const router = useRouter();
@@ -52,31 +50,27 @@ export function ProductForm({
   async function handleSubmit(formData: FormData) {
     setError(null);
     const name = String(formData.get("name") || "").trim();
-    const categoryId = String(formData.get("categoryId") || "");
+    const posteId = String(formData.get("posteId") || "");
+    const groupe = String(formData.get("groupe") || "").trim();
     const quantity = parseFloat(String(formData.get("quantity") || "0"));
     const unit = String(formData.get("unit") || "PIECE") as Unit;
-    const minQuantity = parseFloat(String(formData.get("minQuantity") || "0"));
-    const idealQuantity = parseFloat(String(formData.get("idealQuantity") || "0"));
-    const location = String(formData.get("location") || "");
-    const supplier = String(formData.get("supplier") || "");
-    const priceRaw = String(formData.get("purchasePrice") || "");
+    const targetQuantity = parseFloat(String(formData.get("targetQuantity") || "0"));
+    const depotQuantity = parseFloat(String(formData.get("depotQuantity") || "0"));
     const comment = String(formData.get("comment") || "");
 
-    if (!name || !categoryId) {
-      setError("Le nom et la catégorie sont obligatoires.");
+    if (!name || !posteId) {
+      setError("Le nom et le poste sont obligatoires.");
       return;
     }
 
     const input = {
       name,
-      categoryId,
+      posteId,
+      groupe,
       quantity: Number.isNaN(quantity) ? 0 : quantity,
       unit,
-      minQuantity: Number.isNaN(minQuantity) ? 0 : minQuantity,
-      idealQuantity: Number.isNaN(idealQuantity) ? 0 : idealQuantity,
-      location,
-      supplier,
-      purchasePrice: priceRaw ? parseFloat(priceRaw) : undefined,
+      targetQuantity: Number.isNaN(targetQuantity) ? 0 : targetQuantity,
+      depotQuantity: Number.isNaN(depotQuantity) ? 0 : depotQuantity,
       comment,
       photoUrl,
     };
@@ -133,30 +127,40 @@ export function ProductForm({
             required
             defaultValue={initial?.name}
             className="input"
-            placeholder="Ex : Gobelets 700 ml"
+            placeholder="Ex : Sirop Fraise"
           />
         </Field>
 
-        <Field label="Catégorie" required>
-          <select name="categoryId" required defaultValue={initial?.categoryId} className="input">
-            <option value="" disabled>
-              Choisir une catégorie
-            </option>
-            {categories.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.icon} {c.name}
+        <div className="grid grid-cols-2 gap-3">
+          <Field label="Poste" required>
+            <select name="posteId" required defaultValue={initial?.posteId} className="input">
+              <option value="" disabled>
+                Choisir un poste
               </option>
-            ))}
-          </select>
-        </Field>
+              {postes.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.name}
+                </option>
+              ))}
+            </select>
+          </Field>
+          <Field label="Groupe (facultatif)">
+            <input
+              name="groupe"
+              defaultValue={initial?.groupe}
+              className="input"
+              placeholder="Ex : Sirops"
+            />
+          </Field>
+        </div>
 
         <div className="grid grid-cols-2 gap-3">
-          <Field label="Quantité disponible">
+          <Field label="Quantité cible" required>
             <input
-              name="quantity"
+              name="targetQuantity"
               type="number"
               step="any"
-              defaultValue={initial?.quantity ?? 0}
+              defaultValue={initial?.targetQuantity ?? 0}
               className="input"
             />
           </Field>
@@ -172,40 +176,21 @@ export function ProductForm({
         </div>
 
         <div className="grid grid-cols-2 gap-3">
-          <Field label="Quantité minimale">
+          <Field label="Quantité restante actuelle">
             <input
-              name="minQuantity"
+              name="quantity"
               type="number"
               step="any"
-              defaultValue={initial?.minQuantity ?? 0}
+              defaultValue={initial?.quantity ?? 0}
               className="input"
             />
           </Field>
-          <Field label="Quantité idéale">
+          <Field label="Stock dépôt">
             <input
-              name="idealQuantity"
+              name="depotQuantity"
               type="number"
               step="any"
-              defaultValue={initial?.idealQuantity ?? 0}
-              className="input"
-            />
-          </Field>
-        </div>
-
-        <Field label="Emplacement">
-          <input name="location" defaultValue={initial?.location} className="input" placeholder="Ex : Réserve A" />
-        </Field>
-
-        <div className="grid grid-cols-2 gap-3">
-          <Field label="Fournisseur (facultatif)">
-            <input name="supplier" defaultValue={initial?.supplier} className="input" />
-          </Field>
-          <Field label="Prix d'achat (facultatif)">
-            <input
-              name="purchasePrice"
-              type="number"
-              step="any"
-              defaultValue={initial?.purchasePrice}
+              defaultValue={initial?.depotQuantity ?? 0}
               className="input"
             />
           </Field>

@@ -20,21 +20,16 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "Jeton invalide." }, { status: 401 });
   }
 
-  const existingUsers = await prisma.user.count();
-  if (existingUsers > 0) {
-    return NextResponse.json({
-      message: "La base contient déjà des utilisateurs, aucune action effectuée.",
-    });
-  }
-
   await seedDatabase(prisma);
 
   return NextResponse.json({
-    message: "Base de données initialisée avec succès.",
+    message: "Base de données initialisée avec succès (opération sans risque à rejouer, tout est mis à jour via upsert).",
     comptes: [
-      "Admin : persaudallan@gmail.com / code 1234",
-      "Responsable : responsable@readymiixcabana.com / code 2345",
-      "Employé : employe@readymiixcabana.com / code 3456",
+      "Allan (admin) : persaudallan@gmail.com / code 1234",
+      "Talia (admin) : talia@readymiixcabana.com / code 1111",
+      "Grenadine (Bar & Caïpis) : grenadine@readymiixcabana.com / code 2001",
+      "Océane (Cuisine) : oceane@readymiixcabana.com / code 2002",
+      "Cynthia (Accueil & Boissons) : cynthia@readymiixcabana.com / code 2003",
     ],
   });
 }

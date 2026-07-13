@@ -3,29 +3,65 @@
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { requireSession } from "@/lib/auth";
-import { syncProductReplenishment } from "@/lib/replenishment-sync";
+import { assertPosteAccess, todayDateOnly } from "@/lib/postes";
+import { toBring } from "@/lib/stock";
 
 export type InventoryLineInput = { productId: string; countedQty: number };
 
-export async function submitClosingInventoryAction(lines: InventoryLineInput[], notes?: string) {
-  const session = await requireSession();
+function revalidateAll() {
+  revalidatePath("/inventaire");
+  revalidatePath("/dashboard");
+  revalidatePath("/preparation");
+  revalidatePath("/stock");
+  revalidatePath("/historique");
+}
 
-  const session_ = await prisma.inventorySession.create({
-    data: {
-      userId: session.id,
-      notes: notes || null,
-      finishedAt: new Date(),
-    },
+/** Recalcule (ou retire) la ligne de préparation du jour pour un produit,
+ * en restaurant le stock dépôt si une déduction avait déjà eu lieu. */
+async function syncPrepItem(date: Date, productId: string, posteId: string, quantityNeeded: number) {
+  const existing = await prisma.prepItem.findUnique({
+    where: { date_productId: { date, productId } },
+  });
+
+  if (existing?.depotDeducted) {
+    await prisma.product.update({
+      where: { id: productId },
+      data: { depotQuantity: { increment: existing.quantityNeeded } },
+    });
+  }
+
+  if (quantityNeeded <= 0) {
+    if (existing) {
+      await prisma.prepItem.delete({ where: { id: existing.id } });
+    }
+    return;
+  }
+
+  await prisma.prepItem.upsert({
+    where: { date_productId: { date, productId } },
+    update: { quantityNeeded, checked: false, checkedAt: null, checkedById: null, depotDeducted: false },
+    create: { date, productId, posteId, quantityNeeded },
+  });
+}
+
+export async function submitPosteInventoryAction(posteId: string, lines: InventoryLineInput[]) {
+  const session = await requireSession();
+  await assertPosteAccess(session, posteId);
+
+  const date = todayDateOnly();
+
+  const inventorySession = await prisma.inventorySession.create({
+    data: { posteId, date, userId: session.id, finishedAt: new Date() },
   });
 
   for (const line of lines) {
     const product = await prisma.product.findUnique({ where: { id: line.productId } });
-    if (!product) continue;
+    if (!product || product.posteId !== posteId) continue;
     const counted = Math.max(0, line.countedQty);
 
     await prisma.inventoryLine.create({
       data: {
-        sessionId: session_.id,
+        sessionId: inventorySession.id,
         productId: product.id,
         previousQty: product.quantity,
         countedQty: counted,
@@ -46,20 +82,15 @@ export async function submitClosingInventoryAction(lines: InventoryLineInput[], 
             delta: counted - product.quantity,
             type: "INVENTAIRE",
             userId: session.id,
-            comment: "Inventaire de fermeture",
+            comment: `Clôture du poste — quantité restante`,
           },
         }),
       ]);
     }
 
-    await syncProductReplenishment(product.id);
+    await syncPrepItem(date, product.id, posteId, toBring(product.targetQuantity, counted));
   }
 
-  revalidatePath("/stock");
-  revalidatePath("/dashboard");
-  revalidatePath("/reappro");
-  revalidatePath("/historique");
-  revalidatePath("/inventaire");
-
-  return session_.id;
+  revalidateAll();
+  return inventorySession.id;
 }

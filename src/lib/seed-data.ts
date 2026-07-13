@@ -1,148 +1,166 @@
 import type { PrismaClient, Unit } from "@prisma/client";
 import bcrypt from "bcryptjs";
 
-const CATEGORIES = [
-  { name: "Gobelets 500 ml", icon: "🥤" },
-  { name: "Gobelets 700 ml", icon: "🥤" },
-  { name: "Couvercles", icon: "🔘" },
-  { name: "Pailles", icon: "🥢" },
-  { name: "Sacs et emballages", icon: "🛍️" },
-  { name: "Glace", icon: "🧊" },
-  { name: "Alcools", icon: "🥃" },
-  { name: "Sirops", icon: "🍯" },
-  { name: "Jus", icon: "🧃" },
-  { name: "Citrons", icon: "🍋" },
-  { name: "Fruits frais", icon: "🍉" },
-  { name: "Fraises", icon: "🍓" },
-  { name: "Maracuja", icon: "🥭" },
-  { name: "Bonbons", icon: "🍬" },
-  { name: "Décorations", icon: "🎉" },
-  { name: "Nourriture", icon: "🍢" },
-  { name: "Sauces", icon: "🌶️" },
-  { name: "Produits d'entretien", icon: "🧽" },
-  { name: "Matériel divers", icon: "🧰" },
+type ProductSeed = {
+  name: string;
+  groupe: string;
+  unit: Unit;
+  target: number;
+};
+
+const POSTES: {
+  name: string;
+  order: number;
+  responsibleEmail: string;
+  products: ProductSeed[];
+}[] = [
+  {
+    name: "Bar & Caïpis",
+    order: 0,
+    responsibleEmail: "grenadine@readymiixcabana.com",
+    products: [
+      { name: "Jus de citron", groupe: "Bases", unit: "LITRE", target: 3 },
+      { name: "Rhum", groupe: "Bases", unit: "BOUTEILLE", target: 4 },
+      { name: "Cachaça 51", groupe: "Bases", unit: "BOUTEILLE", target: 4 },
+      { name: "Sucre", groupe: "Bases", unit: "KILOGRAMME", target: 2 },
+      { name: "Glace en sacs de 5 kg", groupe: "Bases", unit: "SAC_5KG", target: 6 },
+
+      { name: "Sirop Fraise", groupe: "Sirops", unit: "BOUTEILLE", target: 2 },
+      { name: "Sirop Pêche", groupe: "Sirops", unit: "BOUTEILLE", target: 2 },
+      { name: "Sirop Mangue", groupe: "Sirops", unit: "BOUTEILLE", target: 2 },
+      { name: "Sirop Maracuja", groupe: "Sirops", unit: "BOUTEILLE", target: 2 },
+      { name: "Sirop Ananas", groupe: "Sirops", unit: "BOUTEILLE", target: 2 },
+      { name: "Sirop Fruits rouges", groupe: "Sirops", unit: "BOUTEILLE", target: 2 },
+      { name: "Sirop Coco", groupe: "Sirops", unit: "BOUTEILLE", target: 2 },
+      { name: "Sirop Cerise", groupe: "Sirops", unit: "BOUTEILLE", target: 2 },
+      { name: "Sirop Myrtille", groupe: "Sirops", unit: "BOUTEILLE", target: 2 },
+      { name: "Sirop Pomme verte", groupe: "Sirops", unit: "BOUTEILLE", target: 2 },
+      { name: "Sirop Litchi", groupe: "Sirops", unit: "BOUTEILLE", target: 2 },
+      { name: "Sirop Kiwi", groupe: "Sirops", unit: "BOUTEILLE", target: 2 },
+
+      { name: "Gobelets 500 ml", groupe: "Consommables", unit: "PAQUET", target: 10 },
+      { name: "Gobelets 700 ml", groupe: "Consommables", unit: "PAQUET", target: 10 },
+      { name: "Couvercles", groupe: "Consommables", unit: "PAQUET", target: 8 },
+      { name: "Pailles", groupe: "Consommables", unit: "PAQUET", target: 6 },
+    ],
+  },
+  {
+    name: "Cuisine",
+    order: 1,
+    responsibleEmail: "oceane@readymiixcabana.com",
+    products: [
+      { name: "Poulet pané", groupe: "Protéines", unit: "PORTION", target: 30 },
+      { name: "Poisson pané", groupe: "Protéines", unit: "PORTION", target: 20 },
+      { name: "Crevettes panées", groupe: "Protéines", unit: "PORTION", target: 20 },
+
+      { name: "Riz", groupe: "Accompagnements", unit: "KILOGRAMME", target: 5 },
+      { name: "Frites", groupe: "Accompagnements", unit: "KILOGRAMME", target: 8 },
+      { name: "Huile", groupe: "Accompagnements", unit: "LITRE", target: 5 },
+      { name: "Oignons frits", groupe: "Accompagnements", unit: "PAQUET", target: 4 },
+
+      { name: "Sauce blanche maison", groupe: "Sauces", unit: "LITRE", target: 2 },
+      { name: "Ketchup", groupe: "Sauces", unit: "BOUTEILLE", target: 3 },
+      { name: "Mayonnaise", groupe: "Sauces", unit: "BOUTEILLE", target: 3 },
+      { name: "Sauce chili", groupe: "Sauces", unit: "BOUTEILLE", target: 2 },
+
+      { name: "Sel", groupe: "Assaisonnements", unit: "KILOGRAMME", target: 1 },
+      { name: "Persil", groupe: "Assaisonnements", unit: "PAQUET", target: 2 },
+
+      { name: "Bowls", groupe: "Contenants", unit: "PIECE", target: 40 },
+      { name: "Couvercles de bowls", groupe: "Contenants", unit: "PIECE", target: 40 },
+      { name: "Couverts", groupe: "Contenants", unit: "PAQUET", target: 10 },
+    ],
+  },
+  {
+    name: "Accueil & Boissons",
+    order: 2,
+    responsibleEmail: "cynthia@readymiixcabana.com",
+    products: [
+      { name: "Rouleaux pour TPE", groupe: "Caisse", unit: "PIECE", target: 3 },
+
+      { name: "Coca-Cola", groupe: "Softs et jus", unit: "CANETTE", target: 24 },
+      { name: "Liptonic", groupe: "Softs et jus", unit: "CANETTE", target: 12 },
+      { name: "Sprite", groupe: "Softs et jus", unit: "CANETTE", target: 12 },
+      { name: "Fanta", groupe: "Softs et jus", unit: "CANETTE", target: 12 },
+      { name: "Minute Maid pomme", groupe: "Softs et jus", unit: "CANETTE", target: 12 },
+      { name: "Lipton Ice Tea", groupe: "Softs et jus", unit: "CANETTE", target: 12 },
+      { name: "Eau", groupe: "Softs et jus", unit: "BOUTEILLE", target: 24 },
+
+      { name: "Heineken", groupe: "Bières", unit: "BOUTEILLE", target: 24 },
+      { name: "Desperados Red", groupe: "Bières", unit: "BOUTEILLE", target: 12 },
+      { name: "Desperados classique", groupe: "Bières", unit: "BOUTEILLE", target: 12 },
+
+      { name: "Red Bull", groupe: "Boissons énergisantes", unit: "CANETTE", target: 12 },
+      { name: "Long Horn", groupe: "Boissons énergisantes", unit: "CANETTE", target: 12 },
+    ],
+  },
 ];
 
-const PRODUCTS: {
-  name: string;
-  category: string;
-  quantity: number;
-  unit: Unit;
-  min: number;
-  ideal: number;
-  location?: string;
-  supplier?: string;
-  price?: number;
-}[] = [
-  { name: "Gobelets 500 ml", category: "Gobelets 500 ml", quantity: 8, unit: "CARTON", min: 3, ideal: 10, location: "Réserve A", supplier: "Distripak", price: 22 },
-  { name: "Gobelets 700 ml", category: "Gobelets 700 ml", quantity: 2, unit: "CARTON", min: 3, ideal: 10, location: "Réserve A", supplier: "Distripak", price: 26 },
-  { name: "Couvercles dômes", category: "Couvercles", quantity: 6, unit: "PAQUET", min: 4, ideal: 12, location: "Réserve A", supplier: "Distripak", price: 8 },
-  { name: "Pailles jumbo", category: "Pailles", quantity: 1, unit: "PAQUET", min: 2, ideal: 6, location: "Comptoir", supplier: "Distripak", price: 5 },
-  { name: "Sacs plastique", category: "Sacs et emballages", quantity: 5, unit: "PAQUET", min: 3, ideal: 8, location: "Comptoir" },
-  { name: "Glace pilée", category: "Glace", quantity: 4, unit: "SAC", min: 5, ideal: 15, location: "Congélateur", supplier: "Glaces du Sud", price: 4.5 },
-  { name: "Rhum blanc", category: "Alcools", quantity: 3, unit: "BOUTEILLE", min: 2, ideal: 6, location: "Bar", supplier: "Cave Tropicale", price: 18 },
-  { name: "Rhum ambré", category: "Alcools", quantity: 0, unit: "BOUTEILLE", min: 2, ideal: 6, location: "Bar", supplier: "Cave Tropicale", price: 19 },
-  { name: "Vodka", category: "Alcools", quantity: 5, unit: "BOUTEILLE", min: 2, ideal: 6, location: "Bar", supplier: "Cave Tropicale", price: 17 },
-  { name: "Sirop passion", category: "Sirops", quantity: 1, unit: "BOUTEILLE", min: 2, ideal: 5, location: "Bar", supplier: "Monin", price: 9 },
-  { name: "Sirop fraise", category: "Sirops", quantity: 4, unit: "BOUTEILLE", min: 2, ideal: 5, location: "Bar", supplier: "Monin", price: 9 },
-  { name: "Sirop coco", category: "Sirops", quantity: 3, unit: "BOUTEILLE", min: 2, ideal: 5, location: "Bar", supplier: "Monin", price: 9 },
-  { name: "Jus d'ananas", category: "Jus", quantity: 6, unit: "LITRE", min: 4, ideal: 12, location: "Frigo", price: 3.2 },
-  { name: "Jus d'orange", category: "Jus", quantity: 2, unit: "LITRE", min: 4, ideal: 12, location: "Frigo", price: 3.2 },
-  { name: "Citrons verts", category: "Citrons", quantity: 1.5, unit: "KILOGRAMME", min: 2, ideal: 5, location: "Frigo", price: 3 },
-  { name: "Citrons jaunes", category: "Citrons", quantity: 3, unit: "KILOGRAMME", min: 2, ideal: 5, location: "Frigo", price: 2.8 },
-  { name: "Pastèque", category: "Fruits frais", quantity: 2, unit: "PIECE", min: 2, ideal: 5, location: "Frigo" },
-  { name: "Ananas", category: "Fruits frais", quantity: 4, unit: "PIECE", min: 2, ideal: 6, location: "Frigo" },
-  { name: "Fraises", category: "Fraises", quantity: 0.5, unit: "KILOGRAMME", min: 1, ideal: 3, location: "Frigo", price: 6 },
-  { name: "Maracuja", category: "Maracuja", quantity: 2, unit: "KILOGRAMME", min: 1, ideal: 3, location: "Frigo", price: 7 },
-  { name: "Bonbons assortis", category: "Bonbons", quantity: 3, unit: "PAQUET", min: 2, ideal: 6, location: "Comptoir" },
-  { name: "Parasols décoratifs", category: "Décorations", quantity: 25, unit: "PIECE", min: 20, ideal: 60, location: "Réserve B" },
-  { name: "Chips", category: "Nourriture", quantity: 6, unit: "PAQUET", min: 4, ideal: 10, location: "Réserve B" },
-  { name: "Sauce piquante", category: "Sauces", quantity: 2, unit: "BOUTEILLE", min: 1, ideal: 3, location: "Bar" },
-  { name: "Liquide vaisselle", category: "Produits d'entretien", quantity: 1, unit: "BOUTEILLE", min: 1, ideal: 3, location: "Réserve C" },
-  { name: "Essuie-tout", category: "Produits d'entretien", quantity: 2, unit: "PAQUET", min: 2, ideal: 5, location: "Réserve C" },
-  { name: "Glacières portables", category: "Matériel divers", quantity: 3, unit: "PIECE", min: 2, ideal: 4, location: "Réserve B" },
+const USERS: { name: string; email: string; pin: string; role: "ADMIN" | "EMPLOYEE" }[] = [
+  { name: "Allan Persaud", email: "persaudallan@gmail.com", pin: "1234", role: "ADMIN" },
+  { name: "Talia", email: "talia@readymiixcabana.com", pin: "1111", role: "ADMIN" },
+  { name: "Grenadine", email: "grenadine@readymiixcabana.com", pin: "2001", role: "EMPLOYEE" },
+  { name: "Océane", email: "oceane@readymiixcabana.com", pin: "2002", role: "EMPLOYEE" },
+  { name: "Cynthia", email: "cynthia@readymiixcabana.com", pin: "2003", role: "EMPLOYEE" },
 ];
 
 export async function seedDatabase(prisma: PrismaClient) {
-  const site = await prisma.site.upsert({
-    where: { id: "stand-principal" },
-    update: {},
-    create: { id: "stand-principal", name: "Stand ReadyMiix Cabana" },
-  });
-
-  for (const [i, c] of CATEGORIES.entries()) {
-    await prisma.category.upsert({
-      where: { name: c.name },
-      update: { icon: c.icon, order: i },
-      create: { name: c.name, icon: c.icon, order: i },
-    });
-  }
-  const categories = await prisma.category.findMany();
-  const byName = (name: string) => categories.find((c) => c.name === name)!.id;
-
-  const admin = await prisma.user.upsert({
-    where: { email: "persaudallan@gmail.com" },
-    update: {},
-    create: {
-      name: "Allan Persaud",
-      email: "persaudallan@gmail.com",
-      pinHash: await bcrypt.hash("1234", 10),
-      role: "ADMIN",
-      siteId: site.id,
-    },
-  });
-
-  await prisma.user.upsert({
-    where: { email: "responsable@readymiixcabana.com" },
-    update: {},
-    create: {
-      name: "Responsable Stand",
-      email: "responsable@readymiixcabana.com",
-      pinHash: await bcrypt.hash("2345", 10),
-      role: "MANAGER",
-      siteId: site.id,
-    },
-  });
-
-  await prisma.user.upsert({
-    where: { email: "employe@readymiixcabana.com" },
-    update: {},
-    create: {
-      name: "Employé Stand",
-      email: "employe@readymiixcabana.com",
-      pinHash: await bcrypt.hash("3456", 10),
-      role: "EMPLOYEE",
-      siteId: site.id,
-    },
-  });
-
-  for (const p of PRODUCTS) {
-    const existing = await prisma.product.findFirst({ where: { name: p.name } });
-    if (existing) continue;
-    await prisma.product.create({
-      data: {
-        name: p.name,
-        categoryId: byName(p.category),
-        quantity: p.quantity,
-        unit: p.unit,
-        minQuantity: p.min,
-        idealQuantity: p.ideal,
-        location: p.location,
-        supplier: p.supplier,
-        purchasePrice: p.price,
-        siteId: site.id,
-        updatedById: admin.id,
-        movements: {
-          create: {
-            type: "CREATION",
-            oldQty: 0,
-            newQty: p.quantity,
-            delta: p.quantity,
-            userId: admin.id,
-            comment: "Stock initial",
-          },
-        },
+  const usersByEmail = new Map<string, { id: string }>();
+  for (const u of USERS) {
+    const user = await prisma.user.upsert({
+      where: { email: u.email },
+      update: {},
+      create: {
+        name: u.name,
+        email: u.email,
+        pinHash: await bcrypt.hash(u.pin, 10),
+        role: u.role,
       },
     });
+    usersByEmail.set(u.email, user);
+  }
+
+  const admin = usersByEmail.get("persaudallan@gmail.com")!;
+
+  for (const posteSeed of POSTES) {
+    const responsible = usersByEmail.get(posteSeed.responsibleEmail);
+    const poste = await prisma.poste.upsert({
+      where: { name: posteSeed.name },
+      update: { order: posteSeed.order, responsibleId: responsible?.id },
+      create: {
+        name: posteSeed.name,
+        order: posteSeed.order,
+        responsibleId: responsible?.id,
+      },
+    });
+
+    for (const p of posteSeed.products) {
+      const existing = await prisma.product.findFirst({
+        where: { name: p.name, posteId: poste.id },
+      });
+      if (existing) continue;
+      await prisma.product.create({
+        data: {
+          name: p.name,
+          posteId: poste.id,
+          groupe: p.groupe,
+          unit: p.unit,
+          targetQuantity: p.target,
+          quantity: p.target,
+          depotQuantity: p.target * 2,
+          updatedById: admin.id,
+          movements: {
+            create: {
+              type: "CREATION",
+              oldQty: 0,
+              newQty: p.target,
+              delta: p.target,
+              userId: admin.id,
+              comment: "Stock initial",
+            },
+          },
+        },
+      });
+    }
   }
 }

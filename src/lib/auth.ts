@@ -84,6 +84,14 @@ export function canManageUsers(role: Role) {
   return role === "ADMIN";
 }
 
-export function canManageCategories(role: Role) {
-  return role === "ADMIN" || role === "MANAGER";
+export function canManagePostes(role: Role) {
+  return role === "ADMIN";
+}
+
+export async function requireAdmin(): Promise<SessionUser> {
+  const session = await requireSession();
+  if (session.role !== "ADMIN") {
+    throw new Error("FORBIDDEN");
+  }
+  return session;
 }

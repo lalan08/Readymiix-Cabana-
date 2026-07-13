@@ -6,10 +6,12 @@ const prisma = new PrismaClient();
 seedDatabase(prisma)
   .then(() => {
     console.log("Seed terminé.");
-    console.log("Comptes de démonstration (à changer en production) :");
-    console.log("  Admin        : persaudallan@gmail.com / code 1234");
-    console.log("  Responsable  : responsable@readymiixcabana.com / code 2345");
-    console.log("  Employé      : employe@readymiixcabana.com / code 3456");
+    console.log("Comptes (à changer en production) :");
+    console.log("  Allan (admin)  : persaudallan@gmail.com / code 1234");
+    console.log("  Talia (admin)  : talia@readymiixcabana.com / code 1111");
+    console.log("  Grenadine (Bar & Caïpis)      : grenadine@readymiixcabana.com / code 2001");
+    console.log("  Océane (Cuisine)              : oceane@readymiixcabana.com / code 2002");
+    console.log("  Cynthia (Accueil & Boissons)  : cynthia@readymiixcabana.com / code 2003");
   })
   .catch((e) => {
     console.error(e);

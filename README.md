@@ -1,8 +1,10 @@
 # Stock ReadyMiix Cabana
 
-Application privée de gestion du stock et du réapprovisionnement du stand
-ReadyMiix Cabana. Pensée mobile-first pour être utilisée rapidement sur
-téléphone pendant le service.
+Application privée de préparation du stand ReadyMiix Cabana avant le service
+du soir (18 h–00 h). Trois postes fixes (Bar & Caïpis, Cuisine, Accueil &
+Boissons) clôturent chaque soir leur stock restant ; l'écart avec la
+quantité cible génère automatiquement la liste unique à préparer avant
+16 h, cochée par Allan/Talia, qui déduit le stock du dépôt en temps réel.
 
 ## Stack technique
 
@@ -13,8 +15,8 @@ téléphone pendant le service.
   deploy`).
 - **Authentification maison** : session JWT (cookie httpOnly) via `jose`,
   connexion par e-mail + code personnel (PIN) haché avec `bcryptjs`.
-  Les rôles (`ADMIN`, `MANAGER`, `EMPLOYEE`) contrôlent l'accès aux pages
-  sensibles (utilisateurs, paramètres).
+  Deux rôles : `ADMIN` (Allan et Talia, accès complet) et `EMPLOYEE`
+  (accès uniquement au poste dont il/elle est responsable).
 
 ## Démarrage (développement local)
 
@@ -25,52 +27,61 @@ ex. [Neon](https://neon.tech), [Supabase](https://supabase.com)).
 npm install
 cp .env.example .env   # renseigner DATABASE_URL et SESSION_SECRET
 npm run db:migrate     # applique les migrations sur la base
-npm run db:seed        # crée les catégories, produits de démo et comptes
+npm run db:seed        # crée les postes, produits et comptes
 npm run dev
 ```
 
 L'application est accessible sur http://localhost:3000.
 
-### Comptes de démonstration (à changer en production)
+### Comptes (à changer en production)
 
-| Rôle          | E-mail                              | Code |
-| ------------- | ------------------------------------ | ---- |
-| Administrateur | persaudallan@gmail.com              | 1234 |
-| Responsable    | responsable@readymiixcabana.com     | 2345 |
-| Employé        | employe@readymiixcabana.com         | 3456 |
+| Rôle | Nom | E-mail | Code |
+| --- | --- | --- | --- |
+| Admin | Allan | persaudallan@gmail.com | 1234 |
+| Admin | Talia | talia@readymiixcabana.com | 1111 |
+| Employé — Bar & Caïpis | Grenadine | grenadine@readymiixcabana.com | 2001 |
+| Employé — Cuisine | Océane | oceane@readymiixcabana.com | 2002 |
+| Employé — Accueil & Boissons | Cynthia | cynthia@readymiixcabana.com | 2003 |
 
-Changez ces codes dès la mise en production depuis la page **Utilisateurs**
-(réservée à l'administrateur).
+Changez ces codes en production depuis **Utilisateurs** (réservée aux
+admins). Pour changer qui est responsable d'un poste (ex. remplacer
+Cynthia), utilisez **Paramètres** — cela ne touche ni aux produits, ni aux
+quantités, ni à l'historique du poste.
 
-## Fonctionnalités principales (V1)
+## Fonctionnement
 
-1. **Voir le stock** — page Stock complet avec filtres par catégorie,
-   statut et recherche, statuts visuels (vert / orange / rouge / bleu).
-2. **Mettre à jour les quantités** — boutons +/-, saisie directe, signaler
-   une rupture, ajouter au réapprovisionnement, depuis chaque fiche produit.
-3. **Générer la liste de réapprovisionnement** — liste automatique des
-   produits sous le seuil minimum, sélection multiple, changement de statut
-   (à préparer → à acheter → en cours → prêt → transféré → terminé), et
-   génération d'une liste de préparation partageable par WhatsApp, copiable,
-   imprimable ou exportable en PDF.
+1. **Clôture du poste (employé)** — sur `/inventaire`, l'employé saisit la
+   quantité restante de chaque produit de son poste (boutons +/-, ou saisie
+   directe) et valide. L'écart avec la quantité cible ("à remettre") est
+   calculé automatiquement et alimente la liste de préparation du jour.
+2. **Préparation (Allan/Talia)** — `/preparation` regroupe par poste tous
+   les produits à remettre. Chaque produit coché est retiré du stock du
+   dépôt ; si le dépôt n'a pas assez, le produit est signalé "Stock dépôt
+   insuffisant". Une fois tout coché, le bouton **Stand prêt pour le
+   service** valide la journée.
+3. **Dépôt** — `/depot` permet de consulter/ajuster le stock disponible au
+   dépôt, et affiche la liste des produits à acheter (stock dépôt
+   insuffisant pour couvrir le besoin du jour).
+4. **Tableau de bord** — vue d'ensemble : inventaires terminés (X/3),
+   produits à remettre, restant à préparer, statut (Non commencé / En
+   cours / Prêt).
 
-Sont également disponibles : inventaire de fermeture, historique des
-mouvements (avec filtres produit/catégorie/personne/période), gestion des
-pertes (casse, péremption, offert...), gestion des utilisateurs et des
-catégories.
+Sont également disponibles : gestion des produits par poste (`/stock`,
+admins), historique des mouvements (`/historique`), gestion des pertes
+(`/pertes`), gestion des utilisateurs et des postes (`/utilisateurs`,
+`/parametres`).
 
 ## Notes d'architecture
 
-- Un modèle `Site` existe déjà dans le schéma pour préparer l'ajout de
-  plusieurs points de stock ReadyMiix à l'avenir sans revoir la structure
-  des données.
-- Les mouvements de stock (`StockMovement`) constituent la source de vérité
-  de l'historique ; chaque entrée, sortie, perte, réapprovisionnement ou
-  ajustement d'inventaire y est journalisé avec l'utilisateur, l'ancienne et
-  la nouvelle quantité.
-- La liste de réapprovisionnement (`ReplenishmentItem`) est resynchronisée
-  automatiquement à chaque chargement du tableau de bord et de la page
-  Réapprovisionnement à partir des niveaux de stock réels.
+- Chaque poste (`Poste`) a un responsable (`responsibleId`) réassignable à
+  tout moment sans impact sur les produits, quantités ou l'historique — les
+  employés n'ont accès qu'au(x) poste(s) dont ils sont responsables.
+- `StockMovement` reste la source de vérité de l'historique des quantités
+  (entrées, sorties, pertes, inventaires).
+- `PrepItem` matérialise, pour une date donnée, l'écart à remettre par
+  produit ; il est régénéré à chaque clôture de poste et coché lors de la
+  préparation (avec déduction/restauration du stock dépôt).
+- `ServiceDay` enregistre la validation finale ("Stand prêt") du jour.
 
 ## Déploiement (ex. Vercel)
 
@@ -84,11 +95,10 @@ catégories.
    `node -e "console.log(require('crypto').randomBytes(48).toString('hex'))"`).
 3. **Déployer.** La commande de build (`prisma migrate deploy && next build`)
    applique automatiquement les migrations à chaque déploiement.
-4. **Initialiser les données** (une seule fois, sur une base vide) :
+4. **Initialiser les données** (sans risque à rejouer) :
    - Définir temporairement la variable d'environnement `SEED_TOKEN` (une
      valeur secrète de votre choix) sur Vercel et redéployer.
    - Visiter `https://votre-app.vercel.app/api/seed?token=VOTRE_SEED_TOKEN`
-     une fois : cela crée les catégories, produits de démonstration et
-     comptes utilisateurs (voir tableau ci-dessus). L'appel est sans effet
-     si la base contient déjà des utilisateurs.
+     une fois : cela crée/met à jour les postes, produits de démonstration
+     et comptes utilisateurs (voir tableau ci-dessus).
    - Supprimer la variable `SEED_TOKEN` une fois l'initialisation faite.

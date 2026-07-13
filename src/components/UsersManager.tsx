@@ -12,9 +12,9 @@ import {
 import { ROLE_LABEL } from "@/lib/roles";
 import type { Role } from "@prisma/client";
 
-type UserRow = { id: string; name: string; email: string; role: Role; active: boolean };
+type UserRow = { id: string; name: string; email: string; role: Role; active: boolean; posteName: string | null };
 
-const ROLES: Role[] = ["ADMIN", "MANAGER", "EMPLOYEE"];
+const ROLES: Role[] = ["ADMIN", "EMPLOYEE"];
 
 export function UsersManager({ users, currentUserId }: { users: UserRow[]; currentUserId: string }) {
   const router = useRouter();
@@ -99,6 +99,9 @@ export function UsersManager({ users, currentUserId }: { users: UserRow[]; curre
                 {u.name} {u.id === currentUserId && <span className="text-xs text-[var(--foreground)]/40">(vous)</span>}
               </p>
               <p className="truncate text-xs text-[var(--foreground)]/60">{u.email}</p>
+              {u.posteName && (
+                <p className="text-xs font-medium text-[var(--color-palm-700)]">Responsable : {u.posteName}</p>
+              )}
             </div>
             <div className="flex flex-wrap items-center gap-2">
               <select

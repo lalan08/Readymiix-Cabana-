@@ -2,14 +2,17 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { MOBILE_NAV_LINKS } from "./nav-links";
+import type { Role } from "@prisma/client";
+import { ADMIN_MOBILE_NAV_LINKS } from "./nav-links";
 
-export function BottomNav() {
+export function BottomNav({ role }: { role: Role }) {
   const pathname = usePathname();
+
+  if (role !== "ADMIN") return null;
 
   return (
     <nav className="no-print fixed inset-x-0 bottom-0 z-30 flex border-t border-[var(--border)] bg-white/95 backdrop-blur md:hidden">
-      {MOBILE_NAV_LINKS.map((link) => {
+      {ADMIN_MOBILE_NAV_LINKS.map((link) => {
         const active = pathname === link.href || pathname.startsWith(link.href + "/");
         const Icon = link.icon;
         return (

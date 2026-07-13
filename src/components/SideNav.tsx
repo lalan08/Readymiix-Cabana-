@@ -3,11 +3,11 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { Role } from "@prisma/client";
-import { NAV_LINKS } from "./nav-links";
+import { ADMIN_NAV_LINKS, EMPLOYEE_NAV_LINKS } from "./nav-links";
 
 export function SideNav({ role }: { role: Role }) {
   const pathname = usePathname();
-  const links = NAV_LINKS.filter((l) => !l.roles || l.roles.includes(role));
+  const links = role === "ADMIN" ? ADMIN_NAV_LINKS : EMPLOYEE_NAV_LINKS;
 
   return (
     <nav className="flex flex-col gap-1">

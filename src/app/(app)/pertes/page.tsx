@@ -1,4 +1,6 @@
+import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
+import { getSession } from "@/lib/auth";
 import { LossForm } from "@/components/LossForm";
 import { LOSS_REASON_LABEL } from "@/lib/losses";
 import { UNIT_LABEL, formatQty } from "@/lib/stock";
@@ -6,8 +8,11 @@ import { UNIT_LABEL, formatQty } from "@/lib/stock";
 export const dynamic = "force-dynamic";
 
 export default async function LossesPage() {
+  const session = await getSession();
+  if (!session || session.role !== "ADMIN") redirect("/dashboard");
+
   const [products, losses] = await Promise.all([
-    prisma.product.findMany({ where: { archived: false }, include: { category: true }, orderBy: { name: "asc" } }),
+    prisma.product.findMany({ where: { archived: false }, include: { poste: true }, orderBy: { name: "asc" } }),
     prisma.loss.findMany({
       include: { product: true, user: true },
       orderBy: { createdAt: "desc" },
@@ -30,7 +35,7 @@ export default async function LossesPage() {
           name: p.name,
           quantity: p.quantity,
           unit: p.unit,
-          categoryName: p.category.name,
+          posteName: p.poste.name,
         }))}
       />
 

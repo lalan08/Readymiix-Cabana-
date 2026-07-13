@@ -38,7 +38,7 @@ export function PreparationPanel({
     doc.setFont("helvetica", "bold");
     doc.setFontSize(16);
     doc.setTextColor(22, 122, 71);
-    doc.text("Réapprovisionnement ReadyMiix Cabana", margin, y);
+    doc.text("À préparer avant 16 h — ReadyMiix Cabana", margin, y);
     y += lineHeight * 1.6;
 
     doc.setFont("helvetica", "normal");
@@ -56,7 +56,7 @@ export function PreparationPanel({
       y += lineHeight;
     }
 
-    doc.save(`reappro-readymiix-cabana-${new Date().toISOString().slice(0, 10)}.pdf`);
+    doc.save(`preparation-readymiix-cabana-${new Date().toISOString().slice(0, 10)}.pdf`);
   }
 
   return (
@@ -92,7 +92,7 @@ export function PreparationPanel({
       </div>
 
       <div className="print-only hidden print:block">
-        <h1 className="mb-4 text-xl font-bold">Réapprovisionnement ReadyMiix Cabana</h1>
+        <h1 className="mb-4 text-xl font-bold">À préparer avant 16 h — ReadyMiix Cabana</h1>
         <pre className="whitespace-pre-wrap font-sans text-sm">{text}</pre>
       </div>
     </div>
