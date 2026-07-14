@@ -39,6 +39,8 @@ L'application est accessible sur http://localhost:3000.
 | --- | --- | --- | --- |
 | Admin | Allan | persaudallan@gmail.com | 1234 |
 | Admin | Talia | talia@readymiixcabana.com | 1111 |
+| Admin | Nathalie | nathalie@readymiixcabana.com | 4444 |
+| Admin | Joël | joel@readymiixcabana.com | 5555 |
 | Employé — Bar & Caïpis | Grenadine | grenadine@readymiixcabana.com | 2001 |
 | Employé — Cuisine | Océane | oceane@readymiixcabana.com | 2002 |
 | Employé — Accueil & Boissons | Cynthia | cynthia@readymiixcabana.com | 2003 |

@@ -27,6 +27,8 @@ export async function GET(request: NextRequest) {
     comptes: [
       "Allan (admin) : persaudallan@gmail.com / code 1234",
       "Talia (admin) : talia@readymiixcabana.com / code 1111",
+      "Nathalie (admin) : nathalie@readymiixcabana.com / code 4444",
+      "Joël (admin) : joel@readymiixcabana.com / code 5555",
       "Grenadine (Bar & Caïpis) : grenadine@readymiixcabana.com / code 2001",
       "Océane (Cuisine) : oceane@readymiixcabana.com / code 2002",
       "Cynthia (Accueil & Boissons) : cynthia@readymiixcabana.com / code 2003",

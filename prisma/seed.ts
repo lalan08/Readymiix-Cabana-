@@ -7,8 +7,10 @@ seedDatabase(prisma)
   .then(() => {
     console.log("Seed terminé.");
     console.log("Comptes (à changer en production) :");
-    console.log("  Allan (admin)  : persaudallan@gmail.com / code 1234");
-    console.log("  Talia (admin)  : talia@readymiixcabana.com / code 1111");
+    console.log("  Allan (admin)    : persaudallan@gmail.com / code 1234");
+    console.log("  Talia (admin)    : talia@readymiixcabana.com / code 1111");
+    console.log("  Nathalie (admin) : nathalie@readymiixcabana.com / code 4444");
+    console.log("  Joël (admin)     : joel@readymiixcabana.com / code 5555");
     console.log("  Grenadine (Bar & Caïpis)      : grenadine@readymiixcabana.com / code 2001");
     console.log("  Océane (Cuisine)              : oceane@readymiixcabana.com / code 2002");
     console.log("  Cynthia (Accueil & Boissons)  : cynthia@readymiixcabana.com / code 2003");

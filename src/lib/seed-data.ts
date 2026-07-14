@@ -99,6 +99,8 @@ const POSTES: {
 const USERS: { name: string; email: string; pin: string; role: "ADMIN" | "EMPLOYEE" }[] = [
   { name: "Allan Persaud", email: "persaudallan@gmail.com", pin: "1234", role: "ADMIN" },
   { name: "Talia", email: "talia@readymiixcabana.com", pin: "1111", role: "ADMIN" },
+  { name: "Nathalie", email: "nathalie@readymiixcabana.com", pin: "4444", role: "ADMIN" },
+  { name: "Joël", email: "joel@readymiixcabana.com", pin: "5555", role: "ADMIN" },
   { name: "Grenadine", email: "grenadine@readymiixcabana.com", pin: "2001", role: "EMPLOYEE" },
   { name: "Océane", email: "oceane@readymiixcabana.com", pin: "2002", role: "EMPLOYEE" },
   { name: "Cynthia", email: "cynthia@readymiixcabana.com", pin: "2003", role: "EMPLOYEE" },
