@@ -9,6 +9,7 @@ import {
   History,
   Users,
   Settings,
+  ShoppingCart,
   type LucideIcon,
 } from "lucide-react";
 
@@ -23,6 +24,7 @@ export const ADMIN_NAV_LINKS: NavLink[] = [
   { href: "/dashboard", label: "Tableau de bord", icon: LayoutDashboard },
   { href: "/inventaire", label: "Inventaire", icon: ClipboardCheck },
   { href: "/preparation", label: "Préparation", icon: ClipboardList },
+  { href: "/caisse", label: "Caisse", icon: ShoppingCart },
   { href: "/depot", label: "Dépôt", icon: Warehouse },
   { href: "/stock", label: "Produits", icon: Package },
   { href: "/pertes", label: "Pertes", icon: AlertTriangle },
@@ -33,12 +35,18 @@ export const ADMIN_NAV_LINKS: NavLink[] = [
 
 export const EMPLOYEE_NAV_LINKS: NavLink[] = [
   { href: "/inventaire", label: "Mon poste", icon: ClipboardCheck },
+  { href: "/caisse", label: "Caisse", icon: ShoppingCart },
 ];
 
 export const ADMIN_MOBILE_NAV_LINKS: NavLink[] = [
   { href: "/dashboard", label: "Accueil", icon: LayoutDashboard },
   { href: "/inventaire", label: "Inventaire", icon: ClipboardCheck },
   { href: "/preparation", label: "Préparation", icon: ClipboardList },
+  { href: "/caisse", label: "Caisse", icon: ShoppingCart },
   { href: "/depot", label: "Dépôt", icon: Warehouse },
-  { href: "/stock", label: "Produits", icon: Package },
+];
+
+export const EMPLOYEE_MOBILE_NAV_LINKS: NavLink[] = [
+  { href: "/inventaire", label: "Mon poste", icon: ClipboardCheck },
+  { href: "/caisse", label: "Caisse", icon: ShoppingCart },
 ];

@@ -67,6 +67,13 @@ quantités, ni à l'historique du poste.
 4. **Tableau de bord** — vue d'ensemble : inventaires terminés (X/3),
    produits à remettre, restant à préparer, statut (Non commencé / En
    cours / Prêt).
+5. **Caisse** — `/caisse`, accessible à tous les comptes connectés. Simple
+   calculateur d'encaissement (pas de gestion de tickets/TVA/factures) :
+   on touche les produits vendus pour les ajouter, +/- et suppression par
+   ligne, sous-total et total automatiques, paiement Espèces (calcul de la
+   monnaie à rendre) / Carte / Annuler, et **Nouvelle commande** pour
+   repartir à zéro. Le catalogue et les prix se gèrent dans **Produits**
+   (`/caisse/produits`, réservé aux admins).
 
 Sont également disponibles : gestion des produits par poste (`/stock`,
 admins), historique des mouvements (`/historique`), gestion des pertes

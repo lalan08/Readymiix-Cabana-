@@ -196,3 +196,18 @@ model ServiceDay {
   readyById String?
   readyBy  User?     @relation("ServiceDayReadyBy", fields: [readyById], references: [id])
 }
+
+/// Produit vendu au comptoir (caisse), avec son prix. Indépendant du stock :
+/// la caisse est un simple calculateur, pas un outil de gestion des ventes.
+model MenuItem {
+  id        String   @id @default(cuid())
+  name      String
+  category  String
+  price     Float
+  order     Int      @default(0)
+  archived  Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([category])
+}

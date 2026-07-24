@@ -96,6 +96,22 @@ const POSTES: {
   },
 ];
 
+const MENU_ITEMS: { name: string; category: string; price: number }[] = [
+  { name: "Caïpirinha Fraise", category: "Cocktails", price: 8 },
+  { name: "Caïpirinha Maracuja", category: "Cocktails", price: 8 },
+  { name: "Caïpirinha Coco", category: "Cocktails", price: 8 },
+  { name: "Caïpirinha Passion", category: "Cocktails", price: 8 },
+
+  { name: "Bowl Poulet", category: "Repas", price: 12 },
+  { name: "Bowl Poisson", category: "Repas", price: 13 },
+  { name: "Bowl Crevettes", category: "Repas", price: 14 },
+
+  { name: "Coca-Cola", category: "Boissons", price: 3 },
+  { name: "Eau", category: "Boissons", price: 2 },
+  { name: "Heineken", category: "Boissons", price: 5 },
+  { name: "Red Bull", category: "Boissons", price: 4 },
+];
+
 const USERS: { name: string; email: string; pin: string; role: "ADMIN" | "EMPLOYEE" }[] = [
   { name: "Allan Persaud", email: "persaudallan@gmail.com", pin: "1234", role: "ADMIN" },
   { name: "Talia", email: "talia@readymiixcabana.com", pin: "1111", role: "ADMIN" },
@@ -164,5 +180,13 @@ export async function seedDatabase(prisma: PrismaClient) {
         },
       });
     }
+  }
+
+  for (const [i, m] of MENU_ITEMS.entries()) {
+    const existing = await prisma.menuItem.findFirst({ where: { name: m.name } });
+    if (existing) continue;
+    await prisma.menuItem.create({
+      data: { name: m.name, category: m.category, price: m.price, order: i },
+    });
   }
 }
