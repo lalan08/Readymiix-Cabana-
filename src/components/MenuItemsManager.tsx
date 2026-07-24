@@ -3,20 +3,12 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { Plus, Pencil, Trash2, Check, X, ImagePlus } from "lucide-react";
+import { Plus, Pencil, Trash2, Check, X, ImagePlus, Loader2 } from "lucide-react";
 import { createMenuItemAction, updateMenuItemAction, archiveMenuItemAction } from "@/lib/actions/menu";
 import { formatPrice } from "@/lib/menu";
+import { fileToCompressedDataUrl } from "@/lib/image";
 
 type MenuItem = { id: string; name: string; category: string; price: number; photoUrl: string | null };
-
-function fileToDataUrl(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result as string);
-    reader.onerror = reject;
-    reader.readAsDataURL(file);
-  });
-}
 
 function PhotoPicker({
   photoUrl,
@@ -25,31 +17,56 @@ function PhotoPicker({
   photoUrl: string;
   onChange: (url: string) => void;
 }) {
-  return photoUrl ? (
-    <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-xl border border-[var(--border)]">
-      <Image src={photoUrl} alt="" fill className="object-cover" unoptimized />
-      <button
-        type="button"
-        onClick={() => onChange("")}
-        className="absolute right-0.5 top-0.5 rounded-full bg-black/60 p-1 text-white"
-      >
-        <X size={11} />
-      </button>
+  const [busy, setBusy] = useState(false);
+  const [photoError, setPhotoError] = useState<string | null>(null);
+
+  async function handleFile(file: File | undefined) {
+    if (!file) return;
+    setPhotoError(null);
+    setBusy(true);
+    try {
+      onChange(await fileToCompressedDataUrl(file));
+    } catch {
+      setPhotoError("Photo illisible, réessayez.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div className="shrink-0">
+      <label className="tap-target relative flex h-16 w-16 cursor-pointer flex-col items-center justify-center gap-0.5 overflow-hidden rounded-xl border border-dashed border-[var(--border)] text-[var(--foreground)]/50">
+        {photoUrl ? (
+          <>
+            <Image src={photoUrl} alt="" fill className="object-cover" unoptimized />
+            <button
+              type="button"
+              onClick={(e) => {
+                e.preventDefault();
+                onChange("");
+              }}
+              className="absolute right-0.5 top-0.5 z-10 rounded-full bg-black/60 p-1 text-white"
+            >
+              <X size={11} />
+            </button>
+          </>
+        ) : busy ? (
+          <Loader2 size={17} className="animate-spin" />
+        ) : (
+          <>
+            <ImagePlus size={17} />
+            <span className="text-[9px]">Photo</span>
+          </>
+        )}
+        <input
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={(e) => handleFile(e.target.files?.[0])}
+        />
+      </label>
+      {photoError && <p className="mt-1 w-16 text-[9px] leading-tight text-[var(--color-status-out)]">{photoError}</p>}
     </div>
-  ) : (
-    <label className="tap-target flex h-16 w-16 shrink-0 cursor-pointer flex-col items-center justify-center gap-0.5 rounded-xl border border-dashed border-[var(--border)] text-[var(--foreground)]/50">
-      <ImagePlus size={17} />
-      <span className="text-[9px]">Photo</span>
-      <input
-        type="file"
-        accept="image/*"
-        className="hidden"
-        onChange={async (e) => {
-          const file = e.target.files?.[0];
-          if (file) onChange(await fileToDataUrl(file));
-        }}
-      />
-    </label>
   );
 }
 
@@ -71,23 +88,28 @@ export function MenuItemsManager({ items }: { items: MenuItem[] }) {
   function submitNew() {
     setError(null);
     startTransition(async () => {
-      const res = await createMenuItemAction({
-        name: form.name,
-        category: form.category,
-        price: parseFloat(form.price.replace(",", ".")),
-        photoUrl: form.photoUrl,
-      });
-      if (res.error) {
-        setError(res.error);
-        return;
+      try {
+        const res = await createMenuItemAction({
+          name: form.name,
+          category: form.category,
+          price: parseFloat(form.price.replace(",", ".")),
+          photoUrl: form.photoUrl,
+        });
+        if (res.error) {
+          setError(res.error);
+          return;
+        }
+        setForm({ name: "", category: "", price: "", photoUrl: "" });
+        setShowForm(false);
+        router.refresh();
+      } catch {
+        setError("Échec de l'enregistrement. Réessayez (photo peut-être trop lourde).");
       }
-      setForm({ name: "", category: "", price: "", photoUrl: "" });
-      setShowForm(false);
-      router.refresh();
     });
   }
 
   function startEdit(item: MenuItem) {
+    setError(null);
     setEditingId(item.id);
     setEditForm({
       name: item.name,
@@ -100,18 +122,22 @@ export function MenuItemsManager({ items }: { items: MenuItem[] }) {
   function submitEdit(id: string) {
     setError(null);
     startTransition(async () => {
-      const res = await updateMenuItemAction(id, {
-        name: editForm.name,
-        category: editForm.category,
-        price: parseFloat(editForm.price.replace(",", ".")),
-        photoUrl: editForm.photoUrl,
-      });
-      if (res.error) {
-        setError(res.error);
-        return;
+      try {
+        const res = await updateMenuItemAction(id, {
+          name: editForm.name,
+          category: editForm.category,
+          price: parseFloat(editForm.price.replace(",", ".")),
+          photoUrl: editForm.photoUrl,
+        });
+        if (res.error) {
+          setError(res.error);
+          return;
+        }
+        setEditingId(null);
+        router.refresh();
+      } catch {
+        setError("Échec de l'enregistrement. Réessayez (photo peut-être trop lourde).");
       }
-      setEditingId(null);
-      router.refresh();
     });
   }
 
@@ -156,8 +182,8 @@ export function MenuItemsManager({ items }: { items: MenuItem[] }) {
             className="input"
           />
           {error && <p className="text-sm font-medium text-[var(--color-status-out)]">{error}</p>}
-          <button onClick={submitNew} disabled={pending} className="btn btn-primary tap-target w-full">
-            Ajouter
+          <button onClick={submitNew} disabled={pending} className="btn btn-primary tap-target w-full disabled:opacity-60">
+            {pending ? "Enregistrement..." : "Ajouter"}
           </button>
         </div>
       )}
@@ -193,9 +219,14 @@ export function MenuItemsManager({ items }: { items: MenuItem[] }) {
                     onChange={(e) => setEditForm((f) => ({ ...f, price: e.target.value }))}
                     className="input"
                   />
+                  {error && <p className="text-sm font-medium text-[var(--color-status-out)]">{error}</p>}
                   <div className="flex gap-2">
-                    <button onClick={() => submitEdit(item.id)} className="btn btn-primary tap-target flex-1 text-sm">
-                      <Check size={14} /> Enregistrer
+                    <button
+                      onClick={() => submitEdit(item.id)}
+                      disabled={pending}
+                      className="btn btn-primary tap-target flex-1 text-sm disabled:opacity-60"
+                    >
+                      <Check size={14} /> {pending ? "Enregistrement..." : "Enregistrer"}
                     </button>
                     <button onClick={() => setEditingId(null)} className="btn btn-secondary tap-target text-sm">
                       <X size={14} />

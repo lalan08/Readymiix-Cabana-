@@ -3,24 +3,16 @@
 import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { ImagePlus, X } from "lucide-react";
+import { ImagePlus, X, Loader2 } from "lucide-react";
 import { declareLossAction } from "@/lib/actions/losses";
 import { LOSS_REASON_LABEL } from "@/lib/losses";
 import { UNIT_LABEL } from "@/lib/stock";
+import { fileToCompressedDataUrl } from "@/lib/image";
 import type { LossReason } from "@prisma/client";
 
 type Product = { id: string; name: string; quantity: number; unit: keyof typeof UNIT_LABEL; posteName: string };
 
 const REASONS = Object.keys(LOSS_REASON_LABEL) as LossReason[];
-
-function fileToDataUrl(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result as string);
-    reader.onerror = reject;
-    reader.readAsDataURL(file);
-  });
-}
 
 export function LossForm({ products }: { products: Product[] }) {
   const router = useRouter();
@@ -30,8 +22,21 @@ export function LossForm({ products }: { products: Product[] }) {
   const [reason, setReason] = useState<LossReason>("CASSE");
   const [comment, setComment] = useState("");
   const [photoUrl, setPhotoUrl] = useState("");
+  const [photoBusy, setPhotoBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState("");
+
+  async function handlePhotoFile(file: File | undefined) {
+    if (!file) return;
+    setPhotoBusy(true);
+    try {
+      setPhotoUrl(await fileToCompressedDataUrl(file));
+    } catch {
+      setError("Photo illisible, réessayez.");
+    } finally {
+      setPhotoBusy(false);
+    }
+  }
 
   const filtered = useMemo(
     () => products.filter((p) => p.name.toLowerCase().includes(search.toLowerCase())).slice(0, 30),
@@ -52,13 +57,17 @@ export function LossForm({ products }: { products: Product[] }) {
       return;
     }
     startTransition(async () => {
-      await declareLossAction({ productId, quantity: qty, reason, comment, photoUrl });
-      router.refresh();
-      setProductId("");
-      setQuantity("1");
-      setComment("");
-      setPhotoUrl("");
-      setSearch("");
+      try {
+        await declareLossAction({ productId, quantity: qty, reason, comment, photoUrl });
+        router.refresh();
+        setProductId("");
+        setQuantity("1");
+        setComment("");
+        setPhotoUrl("");
+        setSearch("");
+      } catch {
+        setError("Échec de l'enregistrement. Réessayez (photo peut-être trop lourde).");
+      }
     });
   }
 
@@ -132,32 +141,36 @@ export function LossForm({ products }: { products: Product[] }) {
 
       <div>
         <label className="mb-1 block text-sm font-semibold">Photo (facultative)</label>
-        {photoUrl ? (
-          <div className="relative h-20 w-20 overflow-hidden rounded-xl border border-[var(--border)]">
-            <Image src={photoUrl} alt="" fill className="object-cover" unoptimized />
-            <button
-              type="button"
-              onClick={() => setPhotoUrl("")}
-              className="absolute right-0.5 top-0.5 rounded-full bg-black/60 p-1 text-white"
-            >
-              <X size={12} />
-            </button>
-          </div>
-        ) : (
-          <label className="tap-target flex h-20 w-20 cursor-pointer flex-col items-center justify-center gap-1 rounded-xl border border-dashed border-[var(--border)] text-[var(--foreground)]/50">
-            <ImagePlus size={20} />
-            <span className="text-[10px]">Ajouter</span>
-            <input
-              type="file"
-              accept="image/*"
-              className="hidden"
-              onChange={async (e) => {
-                const file = e.target.files?.[0];
-                if (file) setPhotoUrl(await fileToDataUrl(file));
-              }}
-            />
-          </label>
-        )}
+        <label className="tap-target relative flex h-20 w-20 cursor-pointer flex-col items-center justify-center gap-1 overflow-hidden rounded-xl border border-dashed border-[var(--border)] text-[var(--foreground)]/50">
+          {photoUrl ? (
+            <>
+              <Image src={photoUrl} alt="" fill className="object-cover" unoptimized />
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  setPhotoUrl("");
+                }}
+                className="absolute right-0.5 top-0.5 z-10 rounded-full bg-black/60 p-1 text-white"
+              >
+                <X size={12} />
+              </button>
+            </>
+          ) : photoBusy ? (
+            <Loader2 size={20} className="animate-spin" />
+          ) : (
+            <>
+              <ImagePlus size={20} />
+              <span className="text-[10px]">Ajouter</span>
+            </>
+          )}
+          <input
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={(e) => handlePhotoFile(e.target.files?.[0])}
+          />
+        </label>
       </div>
 
       {error && (
