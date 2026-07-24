@@ -41,7 +41,13 @@ export default async function CaissePage() {
         </div>
       ) : (
         <Caisse
-          items={items.map((i) => ({ id: i.id, name: i.name, category: i.category, price: i.price }))}
+          items={items.map((i) => ({
+            id: i.id,
+            name: i.name,
+            category: i.category,
+            price: i.price,
+            photoUrl: i.photoUrl,
+          }))}
         />
       )}
     </div>

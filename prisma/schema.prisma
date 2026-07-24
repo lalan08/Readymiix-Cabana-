@@ -204,6 +204,7 @@ model MenuItem {
   name      String
   category  String
   price     Float
+  photoUrl  String?
   order     Int      @default(0)
   archived  Boolean  @default(false)
   createdAt DateTime @default(now())

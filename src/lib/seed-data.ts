@@ -96,11 +96,38 @@ const POSTES: {
   },
 ];
 
-const MENU_ITEMS: { name: string; category: string; price: number }[] = [
-  { name: "Caïpirinha Fraise", category: "Cocktails", price: 8 },
-  { name: "Caïpirinha Maracuja", category: "Cocktails", price: 8 },
-  { name: "Caïpirinha Coco", category: "Cocktails", price: 8 },
-  { name: "Caïpirinha Passion", category: "Cocktails", price: 8 },
+// Anciens produits placeholder (prix/étiquettes approximatifs) remplacés
+// par le vrai menu Frozen Caïpi ci-dessous.
+const STALE_MENU_ITEM_NAMES = [
+  "Caïpirinha Fraise",
+  "Caïpirinha Maracuja",
+  "Caïpirinha Coco",
+  "Caïpirinha Passion",
+];
+
+const FRUITE_FLAVORS: { name: string; photo: string }[] = [
+  { name: "Fraise", photo: "caipi-fraise.jpg" },
+  { name: "Pêche", photo: "caipi-peche.jpg" },
+  { name: "Mangue", photo: "caipi-mangue.jpg" },
+  { name: "Maracudja", photo: "caipi-maracuja.jpg" },
+  { name: "Ananas", photo: "caipi-ananas.jpg" },
+  { name: "Fruits rouges", photo: "caipi-fruits-rouges.jpg" },
+  { name: "Coco", photo: "caipi-coco.jpg" },
+  { name: "Cerise", photo: "caipi-cerise.jpg" },
+  { name: "Myrtille", photo: "caipi-myrtille.jpg" },
+  { name: "Pomme verte", photo: "caipi-pomme-verte.jpg" },
+  { name: "Litchi", photo: "caipi-litchi.jpg" },
+];
+
+const MENU_ITEMS: { name: string; category: string; price: number; photoUrl?: string }[] = [
+  { name: "Caïpi Classique (Citron vert) 500 ml", category: "Frozen Caïpi", price: 10, photoUrl: "/menu/caipi-classique.jpg" },
+  { name: "Caïpi Classique (Citron vert) 700 ml", category: "Frozen Caïpi", price: 12, photoUrl: "/menu/caipi-classique.jpg" },
+  ...FRUITE_FLAVORS.flatMap((f) => [
+    { name: `Caïpi ${f.name} 500 ml`, category: "Frozen Caïpi", price: 12, photoUrl: `/menu/${f.photo}` },
+    { name: `Caïpi ${f.name} 700 ml`, category: "Frozen Caïpi", price: 14, photoUrl: `/menu/${f.photo}` },
+  ]),
+
+  { name: "Supplément bonbons / topping", category: "Suppléments", price: 1 },
 
   { name: "Bowl Poulet", category: "Repas", price: 12 },
   { name: "Bowl Poisson", category: "Repas", price: 13 },
@@ -182,11 +209,16 @@ export async function seedDatabase(prisma: PrismaClient) {
     }
   }
 
+  // Retire les anciens produits placeholder — remplacés ci-dessous par le
+  // vrai menu. Ne touche à rien d'autre pour ne jamais écraser un prix
+  // modifié depuis l'admin.
+  await prisma.menuItem.deleteMany({ where: { name: { in: STALE_MENU_ITEM_NAMES } } });
+
   for (const [i, m] of MENU_ITEMS.entries()) {
     const existing = await prisma.menuItem.findFirst({ where: { name: m.name } });
     if (existing) continue;
     await prisma.menuItem.create({
-      data: { name: m.name, category: m.category, price: m.price, order: i },
+      data: { name: m.name, category: m.category, price: m.price, photoUrl: m.photoUrl ?? null, order: i },
     });
   }
 }

@@ -15,6 +15,7 @@ export type MenuItemInput = {
   name: string;
   category: string;
   price: number;
+  photoUrl?: string;
 };
 
 export async function createMenuItemAction(input: MenuItemInput): Promise<MenuItemFormResult> {
@@ -31,6 +32,7 @@ export async function createMenuItemAction(input: MenuItemInput): Promise<MenuIt
       name: input.name.trim(),
       category: input.category.trim(),
       price: input.price,
+      photoUrl: input.photoUrl || null,
       order: count,
     },
   });
@@ -51,7 +53,12 @@ export async function updateMenuItemAction(
   }
   await prisma.menuItem.update({
     where: { id },
-    data: { name: input.name.trim(), category: input.category.trim(), price: input.price },
+    data: {
+      name: input.name.trim(),
+      category: input.category.trim(),
+      price: input.price,
+      photoUrl: input.photoUrl || null,
+    },
   });
   revalidateAll();
   return {};

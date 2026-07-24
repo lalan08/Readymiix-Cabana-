@@ -1,10 +1,11 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import Image from "next/image";
 import { Plus, Minus, Trash2, RotateCcw, Banknote, CreditCard, X } from "lucide-react";
 import { formatPrice } from "@/lib/menu";
 
-type MenuItem = { id: string; name: string; category: string; price: number };
+type MenuItem = { id: string; name: string; category: string; price: number; photoUrl: string | null };
 type CartLine = { id: string; name: string; price: number; qty: number };
 type Payment = "ESPECES" | "CARTE" | null;
 
@@ -204,10 +205,19 @@ export function Caisse({ items }: { items: MenuItem[] }) {
           <button
             key={item.id}
             onClick={() => addItem(item)}
-            className="card flex flex-col items-start gap-1 p-4 text-left transition-transform active:scale-[0.96]"
+            className="card flex flex-col items-start gap-2 overflow-hidden p-0 pb-3 text-left transition-transform active:scale-[0.96]"
           >
-            <span className="font-semibold">{item.name}</span>
-            <span className="text-sm font-bold text-[var(--color-coral-600)]">{formatPrice(item.price)}</span>
+            {item.photoUrl ? (
+              <div className="relative aspect-square w-full">
+                <Image src={item.photoUrl} alt="" fill className="object-cover" unoptimized />
+              </div>
+            ) : (
+              <div className="aspect-square w-full bg-[var(--color-sand-100)]" />
+            )}
+            <div className="flex flex-col gap-1 px-3">
+              <span className="text-sm font-semibold leading-tight">{item.name}</span>
+              <span className="text-sm font-bold text-[var(--color-coral-600)]">{formatPrice(item.price)}</span>
+            </div>
           </button>
         ))}
       </div>
