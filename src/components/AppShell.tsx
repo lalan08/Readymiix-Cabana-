@@ -24,7 +24,7 @@ export function AppShell({
       </aside>
 
       <div className="flex min-h-screen flex-1 flex-col">
-        <header className="no-print sticky top-0 z-20 flex items-center justify-between border-b border-[var(--border)] bg-[var(--background)]/90 px-4 py-3 backdrop-blur md:px-8">
+        <header className="no-print sticky top-0 z-20 flex h-16 shrink-0 items-center justify-between border-b border-[var(--border)] bg-[var(--background)]/90 px-4 backdrop-blur md:px-8">
           <div className="md:hidden">
             <Logo size={34} />
           </div>
