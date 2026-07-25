@@ -214,61 +214,28 @@ export function Caisse({ items }: { items: MenuItem[] }) {
           {(categories.find(([c]) => c === activeCategory)?.[1] ?? []).map((item) => {
             const qty = cart[item.id]?.qty ?? 0;
             return (
-              <div key={item.id} className="card flex flex-col overflow-hidden p-0 pb-2.5">
-                <div
-                  role="button"
-                  tabIndex={0}
-                  onClick={() => addItem(item)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" || e.key === " ") {
-                      e.preventDefault();
-                      addItem(item);
-                    }
-                  }}
-                  className="flex cursor-pointer flex-col items-start gap-2 text-left transition-transform active:scale-[0.96]"
-                >
-                  {item.photoUrl ? (
-                    <div className="relative aspect-square w-full">
-                      <Image src={item.photoUrl} alt="" fill className="object-cover" unoptimized />
-                    </div>
-                  ) : (
-                    <div className="aspect-square w-full bg-[var(--color-sand-100)]" />
-                  )}
-                  <div className="flex flex-col gap-1 px-3">
-                    <span className="text-sm font-semibold leading-tight">{item.name}</span>
-                    <span className="text-sm font-bold text-[var(--color-coral-600)]">{formatPrice(item.price)}</span>
+              <button
+                key={item.id}
+                onClick={() => addItem(item)}
+                className="card relative flex flex-col items-start gap-2 overflow-hidden p-0 pb-3 text-left transition-transform active:scale-[0.96]"
+              >
+                {qty > 0 && (
+                  <span className="absolute right-2 top-2 z-10 flex h-6 min-w-6 items-center justify-center rounded-full bg-[var(--color-palm-600)] px-1.5 text-xs font-extrabold text-white shadow">
+                    {qty}
+                  </span>
+                )}
+                {item.photoUrl ? (
+                  <div className="relative aspect-square w-full">
+                    <Image src={item.photoUrl} alt="" fill className="object-cover" unoptimized />
                   </div>
+                ) : (
+                  <div className="aspect-square w-full bg-[var(--color-sand-100)]" />
+                )}
+                <div className="flex flex-col gap-1 px-3">
+                  <span className="text-sm font-semibold leading-tight">{item.name}</span>
+                  <span className="text-sm font-bold text-[var(--color-coral-600)]">{formatPrice(item.price)}</span>
                 </div>
-
-                <div className="mt-2 px-3">
-                  {qty > 0 ? (
-                    <div className="flex items-center justify-between rounded-lg bg-[var(--color-palm-600)] p-1">
-                      <button
-                        onClick={() => changeQty(item.id, -1)}
-                        className="tap-target flex h-7 w-7 items-center justify-center rounded-md bg-white/20 text-white active:bg-white/30"
-                        aria-label="Retirer un"
-                      >
-                        <Minus size={14} />
-                      </button>
-                      <span className="text-sm font-extrabold text-white">{qty}</span>
-                      <button
-                        onClick={() => addItem(item)}
-                        className="tap-target flex h-7 w-7 items-center justify-center rounded-md bg-white/20 text-white active:bg-white/30"
-                        aria-label="Ajouter un"
-                      >
-                        <Plus size={14} />
-                      </button>
-                    </div>
-                  ) : (
-                    <button
-                      onClick={() => addItem(item)}
-                      className="tap-target w-full rounded-lg bg-[var(--color-palm-600)]/10 py-1.5 text-xs font-bold text-[var(--color-palm-700)] active:bg-[var(--color-palm-600)]/20"
-                    >
-                      + Ajouter
-                    </button>
-                  )}
-                </div>
-              </div>
+              </button>
             );
           })}
         </div>
