@@ -212,18 +212,12 @@ export function Caisse({ items }: { items: MenuItem[] }) {
 
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:mt-3 md:grid-cols-3 lg:grid-cols-4">
           {(categories.find(([c]) => c === activeCategory)?.[1] ?? []).map((item) => {
-            const qty = cart[item.id]?.qty ?? 0;
             return (
               <button
                 key={item.id}
                 onClick={() => addItem(item)}
-                className="card relative flex flex-col items-start gap-2 overflow-hidden p-0 pb-3 text-left transition-transform active:scale-[0.96]"
+                className="card flex flex-col items-start gap-2 overflow-hidden p-0 pb-3 text-left transition-transform active:scale-[0.96]"
               >
-                {qty > 0 && (
-                  <span className="absolute right-2 top-2 z-10 flex h-6 min-w-6 items-center justify-center rounded-full bg-[var(--color-palm-600)] px-1.5 text-xs font-extrabold text-white shadow">
-                    {qty}
-                  </span>
-                )}
                 {item.photoUrl ? (
                   <div className="relative aspect-square w-full">
                     <Image src={item.photoUrl} alt="" fill className="object-cover" unoptimized />
