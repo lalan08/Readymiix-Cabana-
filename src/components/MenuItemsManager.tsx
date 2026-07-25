@@ -70,14 +70,20 @@ function PhotoPicker({
   );
 }
 
+const NEW_CATEGORY = "__new__";
+
 export function MenuItemsManager({ items }: { items: MenuItem[] }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ name: "", category: "", price: "", photoUrl: "" });
+  const [newCategory, setNewCategory] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState({ name: "", category: "", price: "", photoUrl: "" });
+  const [editNewCategory, setEditNewCategory] = useState(false);
+
+  const categories = [...new Set(items.map((i) => i.category))].sort((a, b) => a.localeCompare(b));
 
   const grouped = new Map<string, MenuItem[]>();
   for (const item of items) {
@@ -100,6 +106,7 @@ export function MenuItemsManager({ items }: { items: MenuItem[] }) {
           return;
         }
         setForm({ name: "", category: "", price: "", photoUrl: "" });
+        setNewCategory(false);
         setShowForm(false);
         router.refresh();
       } catch {
@@ -117,6 +124,7 @@ export function MenuItemsManager({ items }: { items: MenuItem[] }) {
       price: item.price.toString(),
       photoUrl: item.photoUrl ?? "",
     });
+    setEditNewCategory(!categories.includes(item.category));
   }
 
   function submitEdit(id: string) {
@@ -166,12 +174,38 @@ export function MenuItemsManager({ items }: { items: MenuItem[] }) {
                 onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
                 className="input"
               />
-              <input
-                placeholder="Catégorie (ex : Frozen Caïpi)"
-                value={form.category}
-                onChange={(e) => setForm((f) => ({ ...f, category: e.target.value }))}
-                className="input"
-              />
+              {newCategory ? (
+                <input
+                  placeholder="Nom de la nouvelle catégorie"
+                  value={form.category}
+                  onChange={(e) => setForm((f) => ({ ...f, category: e.target.value }))}
+                  className="input"
+                  autoFocus
+                />
+              ) : (
+                <select
+                  value={form.category}
+                  onChange={(e) => {
+                    if (e.target.value === NEW_CATEGORY) {
+                      setNewCategory(true);
+                      setForm((f) => ({ ...f, category: "" }));
+                    } else {
+                      setForm((f) => ({ ...f, category: e.target.value }));
+                    }
+                  }}
+                  className="input"
+                >
+                  <option value="" disabled>
+                    Choisir une catégorie
+                  </option>
+                  {categories.map((c) => (
+                    <option key={c} value={c}>
+                      {c}
+                    </option>
+                  ))}
+                  <option value={NEW_CATEGORY}>+ Nouvelle catégorie</option>
+                </select>
+              )}
             </div>
           </div>
           <input
@@ -206,11 +240,35 @@ export function MenuItemsManager({ items }: { items: MenuItem[] }) {
                         onChange={(e) => setEditForm((f) => ({ ...f, name: e.target.value }))}
                         className="input"
                       />
-                      <input
-                        value={editForm.category}
-                        onChange={(e) => setEditForm((f) => ({ ...f, category: e.target.value }))}
-                        className="input"
-                      />
+                      {editNewCategory ? (
+                        <input
+                          value={editForm.category}
+                          onChange={(e) => setEditForm((f) => ({ ...f, category: e.target.value }))}
+                          className="input"
+                          placeholder="Nom de la nouvelle catégorie"
+                          autoFocus
+                        />
+                      ) : (
+                        <select
+                          value={editForm.category}
+                          onChange={(e) => {
+                            if (e.target.value === NEW_CATEGORY) {
+                              setEditNewCategory(true);
+                              setEditForm((f) => ({ ...f, category: "" }));
+                            } else {
+                              setEditForm((f) => ({ ...f, category: e.target.value }));
+                            }
+                          }}
+                          className="input"
+                        >
+                          {categories.map((c) => (
+                            <option key={c} value={c}>
+                              {c}
+                            </option>
+                          ))}
+                          <option value={NEW_CATEGORY}>+ Nouvelle catégorie</option>
+                        </select>
+                      )}
                     </div>
                   </div>
                   <input
