@@ -1,9 +1,10 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useTransition } from "react";
 import Image from "next/image";
-import { Plus, Minus, Trash2, RotateCcw, Banknote, CreditCard, X } from "lucide-react";
+import { Plus, Minus, Trash2, RotateCcw, Banknote, CreditCard, X, Check } from "lucide-react";
 import { formatPrice } from "@/lib/menu";
+import { recordSaleAction } from "@/lib/actions/sales";
 
 type MenuItem = { id: string; name: string; category: string; price: number; photoUrl: string | null };
 type CartLine = { id: string; name: string; price: number; qty: number };
@@ -13,6 +14,9 @@ export function Caisse({ items }: { items: MenuItem[] }) {
   const [cart, setCart] = useState<Record<string, CartLine>>({});
   const [payment, setPayment] = useState<Payment>(null);
   const [cashGiven, setCashGiven] = useState("");
+  const [checkingOut, startCheckout] = useTransition();
+  const [saleError, setSaleError] = useState<string | null>(null);
+  const [justSaved, setJustSaved] = useState(false);
 
   const categories = useMemo(() => {
     const seen = new Map<string, MenuItem[]>();
@@ -30,6 +34,7 @@ export function Caisse({ items }: { items: MenuItem[] }) {
   const itemCount = lines.reduce((sum, l) => sum + l.qty, 0);
   const cashAmount = parseFloat(cashGiven.replace(",", "."));
   const change = payment === "ESPECES" && !Number.isNaN(cashAmount) ? cashAmount - total : null;
+  const canCheckout = lines.length > 0 && payment !== null && (payment !== "ESPECES" || (change !== null && change >= 0));
 
   function addItem(item: MenuItem) {
     setCart((c) => {
@@ -74,6 +79,28 @@ export function Caisse({ items }: { items: MenuItem[] }) {
   function handleCancel() {
     if (lines.length > 0 && !confirm("Annuler la commande en cours ?")) return;
     resetOrder();
+  }
+
+  function handleCheckout() {
+    if (!payment || !canCheckout) return;
+    setSaleError(null);
+    startCheckout(async () => {
+      try {
+        const res = await recordSaleAction({
+          items: lines.map((l) => ({ menuItemId: l.id, name: l.name, price: l.price, quantity: l.qty })),
+          paymentMethod: payment,
+        });
+        if (res.error) {
+          setSaleError(res.error);
+          return;
+        }
+        resetOrder();
+        setJustSaved(true);
+        setTimeout(() => setJustSaved(false), 2500);
+      } catch {
+        setSaleError("Échec de l'enregistrement de la vente. Réessayez.");
+      }
+    });
   }
 
   return (
@@ -223,6 +250,26 @@ export function Caisse({ items }: { items: MenuItem[] }) {
           {payment === "CARTE" && (
             <p className="rounded-lg bg-[var(--color-status-ok-bg)] p-2 text-center text-xs font-semibold text-[var(--color-status-ok)] sm:rounded-xl sm:p-3 sm:text-sm">
               Carte — {formatPrice(total)}
+            </p>
+          )}
+
+          {payment && (
+            <button
+              onClick={handleCheckout}
+              disabled={!canCheckout || checkingOut}
+              className="btn btn-primary tap-target w-full text-xs disabled:opacity-40 sm:text-sm"
+            >
+              <Check size={15} /> {checkingOut ? "Enregistrement..." : "Encaisser"}
+            </button>
+          )}
+
+          {saleError && (
+            <p className="text-center text-[11px] font-medium text-[var(--color-status-out)] sm:text-xs">{saleError}</p>
+          )}
+
+          {justSaved && (
+            <p className="rounded-lg bg-[var(--color-status-ok-bg)] p-2 text-center text-xs font-semibold text-[var(--color-status-ok)] sm:rounded-xl sm:p-3 sm:text-sm">
+              Vente enregistrée ✅
             </p>
           )}
         </div>

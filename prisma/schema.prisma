@@ -50,6 +50,11 @@ enum LossReason {
   AUTRE
 }
 
+enum PaymentMethod {
+  ESPECES
+  CARTE
+}
+
 model User {
   id        String   @id @default(cuid())
   name      String
@@ -66,6 +71,7 @@ model User {
   updatedProducts   Product[]          @relation("ProductUpdatedBy")
   prepItemsChecked  PrepItem[]         @relation("PrepItemCheckedBy")
   serviceDaysReady  ServiceDay[]       @relation("ServiceDayReadyBy")
+  sales             Sale[]
 }
 
 model Poste {
@@ -197,8 +203,9 @@ model ServiceDay {
   readyBy  User?     @relation("ServiceDayReadyBy", fields: [readyById], references: [id])
 }
 
-/// Produit vendu au comptoir (caisse), avec son prix. Indépendant du stock :
-/// la caisse est un simple calculateur, pas un outil de gestion des ventes.
+/// Produit vendu au comptoir (caisse), avec son prix. Indépendant du stock
+/// des postes (pas de déduction automatique) : chaque vente est simplement
+/// enregistrée pour l'historique et les statistiques.
 model MenuItem {
   id        String   @id @default(cuid())
   name      String
@@ -210,5 +217,39 @@ model MenuItem {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  saleItems SaleItem[]
+
   @@index([category])
+}
+
+/// Une vente encaissée à la caisse (Espèces ou Carte).
+model Sale {
+  id            String        @id @default(cuid())
+  createdAt     DateTime      @default(now())
+  userId        String?
+  user          User?         @relation(fields: [userId], references: [id])
+  userName      String
+  total         Float
+  paymentMethod PaymentMethod
+  items         SaleItem[]
+
+  @@index([createdAt])
+  @@index([userId])
+}
+
+/// Ligne d'une vente ; nom et prix figés au moment de la vente pour rester
+/// fiables même si le produit de la caisse est ensuite modifié ou supprimé.
+model SaleItem {
+  id         String    @id @default(cuid())
+  saleId     String
+  sale       Sale      @relation(fields: [saleId], references: [id], onDelete: Cascade)
+  menuItemId String?
+  menuItem   MenuItem? @relation(fields: [menuItemId], references: [id], onDelete: SetNull)
+  name       String
+  price      Float
+  quantity   Int
+  lineTotal  Float
+
+  @@index([saleId])
+  @@index([menuItemId])
 }

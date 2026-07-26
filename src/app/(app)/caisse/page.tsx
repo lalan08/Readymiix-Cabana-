@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { Settings } from "lucide-react";
+import { Settings, Receipt } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
 import { Caisse } from "@/components/Caisse";
@@ -21,9 +21,14 @@ export default async function CaissePage() {
       <div className="flex items-center justify-between gap-3">
         <h1 className="text-2xl font-bold text-[var(--color-palm-900)]">Caisse</h1>
         {session.role === "ADMIN" && (
-          <Link href="/caisse/produits" className="btn btn-secondary tap-target shrink-0 text-sm">
-            <Settings size={16} /> Produits
-          </Link>
+          <div className="flex shrink-0 gap-2">
+            <Link href="/ventes" className="btn btn-secondary btn-icon tap-target" aria-label="Ventes">
+              <Receipt size={16} />
+            </Link>
+            <Link href="/caisse/produits" className="btn btn-secondary btn-icon tap-target" aria-label="Produits">
+              <Settings size={16} />
+            </Link>
+          </div>
         )}
       </div>
 

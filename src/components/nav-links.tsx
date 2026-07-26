@@ -10,6 +10,7 @@ import {
   Users,
   Settings,
   ShoppingCart,
+  Receipt,
   type LucideIcon,
 } from "lucide-react";
 
@@ -25,6 +26,7 @@ export const ADMIN_NAV_LINKS: NavLink[] = [
   { href: "/inventaire", label: "Inventaire", icon: ClipboardCheck },
   { href: "/preparation", label: "Préparation", icon: ClipboardList },
   { href: "/caisse", label: "Caisse", icon: ShoppingCart },
+  { href: "/ventes", label: "Ventes", icon: Receipt },
   { href: "/depot", label: "Dépôt", icon: Warehouse },
   { href: "/stock", label: "Produits", icon: Package },
   { href: "/pertes", label: "Pertes", icon: AlertTriangle },
