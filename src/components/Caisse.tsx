@@ -104,7 +104,7 @@ export function Caisse({ items }: { items: MenuItem[] }) {
   }
 
   return (
-    <div className="grid grid-cols-[1fr_160px] gap-2 sm:grid-cols-[1fr_200px] sm:gap-4 md:grid-cols-[1fr_340px] md:gap-6">
+    <div className="grid grid-cols-[1fr_128px] gap-2 sm:grid-cols-[1fr_200px] sm:gap-4 md:grid-cols-[1fr_340px] md:gap-6">
       {/* Products — the only part of the page that scrolls */}
       <div className="order-1 min-w-0">
         <div className="sticky top-16 z-10 -ml-3 flex gap-1.5 overflow-x-auto bg-[var(--background)]/97 py-2 pl-3 pr-2 backdrop-blur sm:gap-2 sm:py-2.5 md:ml-0 md:pl-0">
@@ -207,27 +207,23 @@ export function Caisse({ items }: { items: MenuItem[] }) {
             <p className="text-lg font-extrabold text-[var(--color-palm-900)] sm:text-lg">{formatPrice(total)}</p>
           </div>
 
-          <div className="grid grid-cols-3 gap-1 sm:gap-2">
+          <div className="flex flex-col gap-1.5 sm:grid sm:grid-cols-3 sm:gap-2">
             <button
               onClick={() => setPayment("ESPECES")}
               disabled={lines.length === 0}
-              className={`btn tap-target !px-1 text-xs disabled:opacity-40 sm:!px-4 sm:text-sm ${payment === "ESPECES" ? "btn-primary" : "btn-secondary"}`}
+              className={`btn tap-target text-xs disabled:opacity-40 sm:text-sm ${payment === "ESPECES" ? "btn-primary" : "btn-secondary"}`}
             >
-              <Banknote size={15} /> <span className="hidden sm:inline">Espèces</span>
+              <Banknote size={15} /> Espèces
             </button>
             <button
               onClick={() => setPayment("CARTE")}
               disabled={lines.length === 0}
-              className={`btn tap-target !px-1 text-xs disabled:opacity-40 sm:!px-4 sm:text-sm ${payment === "CARTE" ? "btn-primary" : "btn-secondary"}`}
+              className={`btn tap-target text-xs disabled:opacity-40 sm:text-sm ${payment === "CARTE" ? "btn-primary" : "btn-secondary"}`}
             >
-              <CreditCard size={15} /> <span className="hidden sm:inline">Carte</span>
+              <CreditCard size={15} /> Carte
             </button>
-            <button
-              onClick={handleCancel}
-              disabled={lines.length === 0}
-              className="btn btn-danger tap-target !px-1 text-xs disabled:opacity-40 sm:!px-4 sm:text-sm"
-            >
-              <X size={15} /> <span className="hidden sm:inline">Annuler</span>
+            <button onClick={handleCancel} disabled={lines.length === 0} className="btn btn-danger tap-target text-xs disabled:opacity-40 sm:text-sm">
+              <X size={15} /> Annuler
             </button>
           </div>
 
