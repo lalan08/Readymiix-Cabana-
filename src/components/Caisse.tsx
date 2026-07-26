@@ -107,7 +107,7 @@ export function Caisse({ items }: { items: MenuItem[] }) {
     <div className="grid grid-cols-[1fr_128px] gap-2 sm:grid-cols-[1fr_200px] sm:gap-4 md:grid-cols-[1fr_340px] md:gap-6">
       {/* Products — the only part of the page that scrolls */}
       <div className="order-1 min-w-0">
-        <div className="sticky top-16 z-10 -mx-3 flex gap-1.5 overflow-x-auto bg-[var(--background)]/97 px-3 py-2 backdrop-blur sm:gap-2 sm:py-2.5 md:-mx-0 md:px-0">
+        <div className="sticky top-16 z-10 -ml-3 flex gap-1.5 overflow-x-auto bg-[var(--background)]/97 py-2 pl-3 pr-2 backdrop-blur sm:gap-2 sm:py-2.5 md:ml-0 md:pl-0">
           {categories.map(([category]) => (
             <button
               key={category}
