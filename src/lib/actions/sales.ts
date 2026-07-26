@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
-import { requireSession } from "@/lib/auth";
+import { requireSession, requireAdmin } from "@/lib/auth";
 import type { PaymentMethod } from "@prisma/client";
 
 export type SaleItemInput = {
@@ -53,4 +53,12 @@ export async function recordSaleAction(input: SaleInput): Promise<SaleFormResult
   revalidatePath("/dashboard");
 
   return {};
+}
+
+export async function deleteSaleAction(id: string) {
+  await requireAdmin();
+  await prisma.sale.delete({ where: { id } });
+
+  revalidatePath("/ventes");
+  revalidatePath("/dashboard");
 }

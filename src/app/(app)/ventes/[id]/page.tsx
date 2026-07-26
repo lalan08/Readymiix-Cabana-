@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
 import { formatPrice } from "@/lib/menu";
 import { PAYMENT_METHOD_LABEL } from "@/lib/sales";
+import { DeleteSaleButton } from "@/components/DeleteSaleButton";
 
 export const dynamic = "force-dynamic";
 
@@ -60,6 +61,8 @@ export default async function SaleDetailPage({ params }: { params: Promise<{ id:
         <span>Total</span>
         <span>{formatPrice(sale.total)}</span>
       </div>
+
+      <DeleteSaleButton saleId={sale.id} />
     </div>
   );
 }
