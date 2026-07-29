@@ -1,0 +1,255 @@
+// ReadyMiix Cabana — schéma de la base de données (PostgreSQL)
+//
+// Fonctionnement : 3 postes fixes (Bar & Caïpis, Cuisine, Accueil &
+// Boissons), chacun avec un responsable réassignable. Chaque soir, le
+// responsable clôture son poste (quantité restante par produit) ; l'écart
+// avec la quantité cible alimente une liste de préparation unique, cochée
+// par Allan/Talia, qui déduit le stock du dépôt et valide "Stand prêt".
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  EMPLOYEE
+}
+
+enum Unit {
+  BOUTEILLE
+  SAC_5KG
+  KILOGRAMME
+  LITRE
+  PIECE
+  PAQUET
+  CARTON
+  PORTION
+  BOWL
+  CANETTE
+}
+
+enum MovementType {
+  ENTREE
+  SORTIE
+  PERTE
+  INVENTAIRE
+  CREATION
+}
+
+enum LossReason {
+  CASSE
+  RENVERSE
+  PERIME
+  OFFERT
+  ERREUR_PREPARATION
+  AUTRE
+}
+
+enum PaymentMethod {
+  ESPECES
+  CARTE
+}
+
+model User {
+  id        String   @id @default(cuid())
+  name      String
+  email     String   @unique
+  pinHash   String
+  role      Role     @default(EMPLOYEE)
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  postesResponsable Poste[]            @relation("PosteResponsable")
+  movements         StockMovement[]
+  losses            Loss[]
+  inventorySessions InventorySession[]
+  updatedProducts   Product[]          @relation("ProductUpdatedBy")
+  prepItemsChecked  PrepItem[]         @relation("PrepItemCheckedBy")
+  serviceDaysReady  ServiceDay[]       @relation("ServiceDayReadyBy")
+  sales             Sale[]
+}
+
+model Poste {
+  id              String   @id @default(cuid())
+  name            String   @unique
+  order           Int      @default(0)
+  responsibleId   String?
+  responsible     User?    @relation("PosteResponsable", fields: [responsibleId], references: [id])
+  createdAt       DateTime @default(now())
+
+  products          Product[]
+  inventorySessions InventorySession[]
+  prepItems         PrepItem[]
+}
+
+model Product {
+  id             String   @id @default(cuid())
+  name           String
+  photoUrl       String?
+  posteId        String
+  poste          Poste    @relation(fields: [posteId], references: [id])
+  groupe         String?
+  quantity       Float    @default(0)
+  unit           Unit     @default(PIECE)
+  targetQuantity Float    @default(0)
+  depotQuantity  Float    @default(0)
+  comment        String?
+  archived       Boolean  @default(false)
+
+  updatedAt   DateTime @updatedAt
+  updatedById String?
+  updatedBy   User?    @relation("ProductUpdatedBy", fields: [updatedById], references: [id])
+  createdAt   DateTime @default(now())
+
+  movements      StockMovement[]
+  losses         Loss[]
+  inventoryLines InventoryLine[]
+  prepItems      PrepItem[]
+
+  @@index([posteId])
+}
+
+model StockMovement {
+  id        String       @id @default(cuid())
+  productId String
+  product   Product      @relation(fields: [productId], references: [id])
+  type      MovementType
+  oldQty    Float
+  newQty    Float
+  delta     Float
+  comment   String?
+  userId    String?
+  user      User?        @relation(fields: [userId], references: [id])
+  createdAt DateTime     @default(now())
+
+  @@index([productId])
+  @@index([createdAt])
+}
+
+model Loss {
+  id        String     @id @default(cuid())
+  productId String
+  product   Product    @relation(fields: [productId], references: [id])
+  quantity  Float
+  reason    LossReason
+  photoUrl  String?
+  comment   String?
+  userId    String?
+  user      User?      @relation(fields: [userId], references: [id])
+  createdAt DateTime   @default(now())
+
+  @@index([productId])
+}
+
+/// Clôture de poste d'un soir : une session par poste par jour.
+model InventorySession {
+  id         String    @id @default(cuid())
+  posteId    String
+  poste      Poste     @relation(fields: [posteId], references: [id])
+  date       DateTime  @db.Date
+  userId     String?
+  user       User?     @relation(fields: [userId], references: [id])
+  startedAt  DateTime  @default(now())
+  finishedAt DateTime?
+  lines      InventoryLine[]
+
+  @@index([posteId, date])
+}
+
+model InventoryLine {
+  id          String           @id @default(cuid())
+  sessionId   String
+  session     InventorySession @relation(fields: [sessionId], references: [id])
+  productId   String
+  product     Product          @relation(fields: [productId], references: [id])
+  previousQty Float
+  countedQty  Float
+
+  @@index([sessionId])
+}
+
+/// Ligne de la liste de préparation du jour (à remettre), générée à la
+/// clôture d'un poste. Cochée par Allan/Talia lors de la préparation.
+model PrepItem {
+  id              String    @id @default(cuid())
+  date            DateTime  @db.Date
+  productId       String
+  product         Product   @relation(fields: [productId], references: [id])
+  posteId         String
+  poste           Poste     @relation(fields: [posteId], references: [id])
+  quantityNeeded  Float
+  checked         Boolean   @default(false)
+  checkedAt       DateTime?
+  checkedById     String?
+  checkedBy       User?     @relation("PrepItemCheckedBy", fields: [checkedById], references: [id])
+  depotDeducted   Boolean   @default(false)
+
+  @@unique([date, productId])
+  @@index([date])
+}
+
+/// Un enregistrement par jour de service, créé quand Allan/Talia valident
+/// "Stand prêt pour le service".
+model ServiceDay {
+  id       String    @id @default(cuid())
+  date     DateTime  @unique @db.Date
+  readyAt  DateTime?
+  readyById String?
+  readyBy  User?     @relation("ServiceDayReadyBy", fields: [readyById], references: [id])
+}
+
+/// Produit vendu au comptoir (caisse), avec son prix. Indépendant du stock
+/// des postes (pas de déduction automatique) : chaque vente est simplement
+/// enregistrée pour l'historique et les statistiques.
+model MenuItem {
+  id        String   @id @default(cuid())
+  name      String
+  category  String
+  price     Float
+  photoUrl  String?
+  order     Int      @default(0)
+  archived  Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  saleItems SaleItem[]
+
+  @@index([category])
+}
+
+/// Une vente encaissée à la caisse (Espèces ou Carte).
+model Sale {
+  id            String        @id @default(cuid())
+  createdAt     DateTime      @default(now())
+  userId        String?
+  user          User?         @relation(fields: [userId], references: [id])
+  userName      String
+  total         Float
+  paymentMethod PaymentMethod
+  items         SaleItem[]
+
+  @@index([createdAt])
+  @@index([userId])
+}
+
+/// Ligne d'une vente ; nom et prix figés au moment de la vente pour rester
+/// fiables même si le produit de la caisse est ensuite modifié ou supprimé.
+model SaleItem {
+  id         String    @id @default(cuid())
+  saleId     String
+  sale       Sale      @relation(fields: [saleId], references: [id], onDelete: Cascade)
+  menuItemId String?
+  menuItem   MenuItem? @relation(fields: [menuItemId], references: [id], onDelete: SetNull)
+  name       String
+  price      Float
+  quantity   Int
+  lineTotal  Float
+
+  @@index([saleId])
+  @@index([menuItemId])
+}
